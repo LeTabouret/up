@@ -29,33 +29,6 @@ RUN rpm-ostree override remove firefox firefox-langpacks gnome-classic-session g
 
 
 ## Configure GNOME
-RUN local user_home \
-    && user_home=$(getent passwd "$USER" | cut -d: -f6) \
-    && mkdir -p "$user_home/.background" \
-    && sudo cp ./background/gooff5.jpg "$user_home/.background" \
-    && sudo chown -R "$USER:$USER" "$user_home/.background" \
-    && mkdir -p "$user_home/.local/share/fonts" \
-    && cp -r ./.themes "$user_home" && sudo chown -R "$USER:$USER" "$user_home/.themes" \
-    && cp -r ./.icons "$user_home" && sudo chown -R "$USER:$USER" "$user_home/.icons" \
-    && cp -r ./Fonts/Inter/* "$user_home/.local/share/fonts/" \
-    && cp -r ./Fonts/JetBrains/* "$user_home/.local/share/fonts/" \
-    && sudo chown -R "$USER:$USER" "$user_home/.local/share/fonts/" \
-    && rm -rf "$user_home/.mozilla" \
-    && gsettings set org.gnome.desktop.background picture-uri "file://$user_home/.background/gooff5.jpg" \
-    && gsettings set org.gnome.desktop.screensaver picture-uri "file://$user_home/.background/gooff5.jpg" \
-    && gsettings set org.gnome.desktop.background picture-uri-dark "file://$user_home/.background/gooff5.jpg" \
-    && gsettings set org.gnome.desktop.peripherals.mouse accel-profile 'flat' \
-    && gsettings set org.gnome.desktop.session idle-delay 0 \
-    && gsettings set org.gnome.desktop.interface icon-theme 'Tela-dark' \
-    && gsettings set org.gnome.desktop.interface font-name 'Inter 10' \
-    && gsettings set org.gnome.desktop.interface document-font-name 'Sans 10' \
-    && gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 10' \
-    && gsettings set org.gnome.desktop.wm.preferences titlebar-font 'Inter Bold 10' \
-    && gsettings set org.gnome.shell disable-extension-version-validation true \
-    && gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark \
-    && gsettings set org.gnome.desktop.interface color-scheme prefer-dark \
-    && gsettings set org.gnome.shell favorite-apps "['org.mozilla.firefox.desktop', 'org.gnome.Nautilus.desktop', 'steam.desktop', 'com.discordapp.Discord.desktop', 'org.gnome.Terminal.desktop', 'com.heroicgameslauncher.hgl.desktop', 'com.usebottles.bottles.desktop', 'virt-manager.desktop', 'com.github.tchx84.Flatseal.desktop']"
-    && fc-cache -rv
 
 
 ### 5. POST-MODIFICATIONS
