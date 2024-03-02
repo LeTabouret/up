@@ -25,7 +25,7 @@ RUN rpm-ostree override remove \
     nvtop \
     vim \
     htop \
-    kernel-tools \
+    kernel-tools
 
 ## TO-DO : Configure GNOME
 
