@@ -23,6 +23,10 @@ RUN rpm-ostree override remove \
     gnome-shell-extension-apps-menu \
     toolbox
 
+# Flatpak packages
+RUN flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo --user
+RUN flatpak install -y --user flathub com.discordapp.Discord com.github.tchx84.Flatseal com.heroicgameslauncher.hgl com.usebottles.bottles org.mozilla.firefox io.github.celluloid_player.Celluloid
+
 ## TO-DO : Configure GNOME
 
 ## Clean up
