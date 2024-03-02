@@ -12,20 +12,8 @@ RUN rpm-ostree install \
     gnome-shell-extension-pop-shell \
     langpacks-en
 
-RUN rpm-ostree override remove \
-    firefox \
-    firefox-langpacks \
-    gnome-classic-session \
-    gnome-shell-extension-launch-new-instance \
-    gnome-shell-extension-places-menu \
-    gnome-shell-extension-window-list \
-    gnome-shell-extension-background-logo \
-    gnome-shell-extension-apps-menu \
-    toolbox \
-    nvtop \
-    vim \
-    htop \
-    kernel-tools
+
+RUN rpm-ostree override remove firefox firefox-langpacks gnome-classic-session gnome-shell-extension-launch-new-instance gnome-shell-extension-places-menu gnome-shell-extension-window-list gnome-shell-extension-background-logo gnome-shell-extension-apps-menu toolbox nvtop vim htop kernel-tools
 
 ## TO-DO : Configure GNOME
 
