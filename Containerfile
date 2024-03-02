@@ -27,9 +27,7 @@ FROM ghcr.io/ublue-os/${SOURCE_IMAGE}-${SOURCE_SUFFIX}:${FEDORA_VERSION}${NVIDIA
 RUN rpm-ostree install virt-manager qemu-kvm libvirt steam gnome-shell-extension-pop-shell
 RUN rpm-ostree override remove firefox firefox-langpacks gnome-classic-session gnome-shell-extension-launch-new-instance gnome-shell-extension-places-menu gnome-shell-extension-window-list gnome-shell-extension-background-logo gnome-shell-extension-apps-menu toolbox
 
-
-## Configure GNOME
-
+## TO-DO : Configure GNOME
 
 ### 5. POST-MODIFICATIONS
 ## these commands leave the image in a clean state after local modifications
