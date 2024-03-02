@@ -20,11 +20,6 @@ ARG NVIDIA_VERSION=""
 FROM ghcr.io/ublue-os/${SOURCE_IMAGE}-${SOURCE_SUFFIX}:${FEDORA_VERSION}${NVIDIA_VERSION}
 
 
-### 3. PRE-MODIFICATIONS
-## this directory is needed to prevent failure with some RPM installs
-RUN mkdir -p /var/lib/alternatives
-
-
 ### 4. MODIFICATIONS
 ## make modifications desired in your image and install packages here, a few examples follow
 
@@ -61,14 +56,6 @@ RUN local user_home \
     && gsettings set org.gnome.desktop.interface color-scheme prefer-dark \
     && gsettings set org.gnome.shell favorite-apps "['org.mozilla.firefox.desktop', 'org.gnome.Nautilus.desktop', 'steam.desktop', 'com.discordapp.Discord.desktop', 'org.gnome.Terminal.desktop', 'com.heroicgameslauncher.hgl.desktop', 'com.usebottles.bottles.desktop', 'virt-manager.desktop', 'com.github.tchx84.Flatseal.desktop']"
     && fc-cache -rv
-
-# static binaries can sometimes by added using a COPY directive like these below. 
-COPY --from=cgr.dev/chainguard/kubectl:latest /usr/bin/kubectl /usr/bin/kubectl
-#COPY --from=docker.io/docker/compose-bin:latest /docker-compose /usr/bin/docker-compose
-
-# modify default timeouts on system to prevent slow reboots from services that won't stop
-RUN sed -i 's/#DefaultTimeoutStopSec.*/DefaultTimeoutStopSec=15s/' /etc/systemd/user.conf && \
-    sed -i 's/#DefaultTimeoutStopSec.*/DefaultTimeoutStopSec=15s/' /etc/systemd/system.conf
 
 
 ### 5. POST-MODIFICATIONS
