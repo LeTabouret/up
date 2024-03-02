@@ -21,7 +21,11 @@ RUN rpm-ostree override remove \
     gnome-shell-extension-window-list \
     gnome-shell-extension-background-logo \
     gnome-shell-extension-apps-menu \
-    toolbox
+    toolbox \
+    nvtop \
+    vim \
+    htop \
+    kernel-tools \
 
 ## TO-DO : Configure GNOME
 
