@@ -4,9 +4,17 @@ ARG FEDORA_VERSION="39"
 FROM ghcr.io/ublue-os/${SOURCE_IMAGE}-${SOURCE_SUFFIX}:${FEDORA_VERSION}
 
 ## install and remove a package
-#    firefox \
-    #firefox-langpacks \
+RUN rpm-ostree install \
+    virt-manager \
+    qemu-kvm \
+    libvirt \
+    steam \
+    gnome-shell-extension-pop-shell \
+    langpacks-en
+
 RUN rpm-ostree override remove \
+    firefox \
+    firefox-langpacks \
     gnome-classic-session \
     gnome-shell-extension-launch-new-instance \
     gnome-shell-extension-places-menu \
@@ -18,14 +26,6 @@ RUN rpm-ostree override remove \
     vim \
     htop \
     kernel-tools
-
-RUN rpm-ostree install \
-    virt-manager \
-    qemu-kvm \
-    libvirt \
-    steam \
-    gnome-shell-extension-pop-shell \
-    langpacks-en
 
 ## TO-DO : Configure GNOME
 
