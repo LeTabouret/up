@@ -13,13 +13,11 @@ disable-extension-version-validation=true
 [org/gnome/desktop/interface]
 gtk-theme='Adwaita-dark'
 color-scheme='prefer-dark'
-icon-theme='/usr/share/icons/Tela-dark'
+icon-theme='Tela-dark'
 font-name='Inter 10'
 document-font-name='Sans 10'
 monospace-font-name='JetBrains Mono 10'
+font-antialiasing="rgba"
 
 [org/gnome/desktop/wm/preferences]
 titlebar-font='Inter Bold 10'
-
-[org/gnome/desktop/wm/keybindings]
-interactive-screenshot = ['<Super><Shift>s']
