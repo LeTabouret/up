@@ -34,7 +34,7 @@ RUN mkdir -p /usr/etc/flatpak/remotes.d && \
 # Configure GNOME
 RUN systemctl enable dconf-update.service && \
     fc-cache -f /usr/share/fonts/Inter && \
-    fc-cache -f /usr/share/fonts/JetBrains && \
+    fc-cache -f /usr/share/fonts/JetBrains
 
 # Clean up
 RUN rm -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:phracek:PyCharm.repo && \
