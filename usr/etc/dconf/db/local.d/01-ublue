@@ -1,6 +1,5 @@
 [org/gnome/shell]
 favorite-apps=['org.mozilla.firefox.desktop', 'org.gnome.Nautilus.desktop', 'steam.desktop', 'com.discordapp.Discord.desktop', 'org.gnome.Terminal.desktop', 'com.heroicgameslauncher.hgl.desktop', 'com.usebottles.bottles.desktop', 'virt-manager.desktop', 'com.github.tchx84.Flatseal.desktop', 'org.gnome.Software.desktop']
-S
 
 [org/gnome/desktop/peripherals/mouse]
 accel-profile='flat'
@@ -24,5 +23,3 @@ titlebar-font='Inter Bold 10'
 
 [org/gnome/desktop/wm/keybindings]
 interactive-screenshot = ['<Super><Shift>s']
-
-
