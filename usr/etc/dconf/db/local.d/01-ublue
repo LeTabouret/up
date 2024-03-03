@@ -14,7 +14,7 @@ disable-extension-version-validation=true
 [org/gnome/desktop/interface]
 gtk-theme='Adwaita-dark'
 color-scheme='prefer-dark'
-icon-theme='Tela-dark'
+icon-theme='/usr/share/icons/Tela-dark'
 font-name='Inter 10'
 document-font-name='Sans 10'
 monospace-font-name='JetBrains Mono 10'
