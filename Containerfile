@@ -12,6 +12,7 @@ RUN rpm-ostree install \
     qemu-kvm \
     libvirt \
     steam \
+    systemd-libs \
     gnome-shell-extension-pop-shell \
     langpacks-en
 
