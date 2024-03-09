@@ -11,8 +11,8 @@ RUN rpm-ostree install \
     virt-manager \
     qemu-kvm \
     libvirt \
-    steam \
     mesa-vulkan-drivers \
+    steam \
     systemd-libs \
     gnome-shell-extension-pop-shell \
     langpacks-en
