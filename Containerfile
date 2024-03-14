@@ -11,10 +11,10 @@ RUN rpm-ostree install \
     virt-manager \
     qemu-kvm \
     libvirt \
-    pipewire-alsa \
     mesa-vulkan-drivers \
     steam \
     systemd-libs \
+    pipewire-alsa \
     gnome-shell-extension-pop-shell \
     langpacks-en
 
