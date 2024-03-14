@@ -11,6 +11,7 @@ RUN rpm-ostree install \
     virt-manager \
     qemu-kvm \
     libvirt \
+    pipewire-alsa \
     mesa-vulkan-drivers \
     steam \
     systemd-libs \
