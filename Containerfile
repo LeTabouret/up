@@ -15,6 +15,7 @@ RUN rpm-ostree install \
     steam \
     systemd-libs \
     pipewire-alsa \
+    pipewire-libs \
     gnome-shell-extension-pop-shell \
     langpacks-en
 
