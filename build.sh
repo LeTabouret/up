@@ -4,7 +4,7 @@ set -ouex pipefail
 
 RELEASE="$(rpm -E %fedora)"
 PACKAGE_LIST="up"
-FEDORA_MAJOR_VERSION="39"
+FEDORA_MAJOR_VERSION=$RELEASE
 
 # build list of all packages requested for inclusion
 INCLUDED_PACKAGES=($(jq -r "[(.all.include | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[]), \
