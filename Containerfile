@@ -5,31 +5,12 @@ FROM ghcr.io/ublue-os/${SOURCE_IMAGE}-${SOURCE_SUFFIX}:${FEDORA_VERSION}
 
 # User files
 COPY usr /usr
+COPY packages.json /tmp/packages.json
+COPY build.sh /tmp/build.sh
+RUN chmod +x /tmp/build.sh
 
-# install and remove a package
-RUN rpm-ostree install \
-    virt-manager \
-    qemu-kvm \
-    libvirt \
-    mesa-vulkan-drivers \
-    vulkan-loader \
-    pipewire-alsa \
-    pipewire-libs \
-    steam \
-    systemd-libs \
-    gnome-shell-extension-pop-shell \
-    langpacks-en
-
-RUN rpm-ostree override remove \
-    firefox \
-    firefox-langpacks \
-    gnome-classic-session \
-    gnome-shell-extension-launch-new-instance \
-    gnome-shell-extension-places-menu \
-    gnome-shell-extension-window-list \
-    gnome-shell-extension-background-logo \
-    gnome-shell-extension-apps-menu \
-    toolbox
+# Handle packages via packages.json
+RUN /tmp/build.sh
 
 # Flatpaks
 RUN mkdir -p /usr/etc/flatpak/remotes.d && \

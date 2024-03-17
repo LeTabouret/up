@@ -1,0 +1,32 @@
+{
+	"all": {
+		"include": {
+			"up": [
+				"virt-manager",
+                "qemu-kvm",
+                "libvirt",
+                "mesa-vulkan-drivers",
+                "steam",
+                "pipewire-alsa",
+                "pipewire-libs",
+                "vulkan-loader",
+                "systemd-libs",
+                "gnome-shell-extension-pop-shell",
+                "langpacks-en"
+			]
+		},
+		"exclude": {
+			"up": [
+				"firefox",
+                "firefox-langpacks",
+                "gnome-classic-session",
+                "gnome-shell-extension-launch-new-instance",
+                "gnome-shell-extension-places-menu",
+                "gnome-shell-extension-window-list",
+                "gnome-shell-extension-background-logo",
+                "gnome-shell-extension-apps-menu",
+                "toolbox"
+			]
+		}
+	}
+}
