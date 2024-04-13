@@ -21,3 +21,6 @@ font-antialiasing="rgba"
 
 [org/gnome/desktop/wm/preferences]
 titlebar-font='Inter Bold 10'
+
+[org/gnome/mutter]
+check-alive-timeout=60000
