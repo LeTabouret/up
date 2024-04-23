@@ -7,11 +7,6 @@
                 "libvirt",
                 "mesa-vulkan-drivers",
                 "steam",
-                "pipewire-alsa",
-                "pipewire-libs",
-		"libatomic",
-                "vulkan-loader",
-                "systemd-libs",
                 "gnome-shell-extension-pop-shell",
                 "langpacks-en"
 			]
