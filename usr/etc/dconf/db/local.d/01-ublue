@@ -24,3 +24,6 @@ titlebar-font='Inter Bold 10'
 
 [org/gnome/mutter]
 check-alive-timeout=60000
+
+[org/gnome/mutter/experimental-features]
+variable-refresh-rate=['variable-refresh-rate']

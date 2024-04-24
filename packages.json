@@ -16,6 +16,7 @@
 				"firefox",
                 "firefox-langpacks",
                 "gnome-classic-session",
+                "gnome-classic-session-xsession",
                 "gnome-shell-extension-launch-new-instance",
                 "gnome-shell-extension-places-menu",
                 "gnome-shell-extension-window-list",
