@@ -7,8 +7,7 @@
                 "libvirt",
                 "mesa-vulkan-drivers",
                 "steam",
-                "gnome-shell-extension-pop-shell",
-                "langpacks-en"
+                "gnome-shell-extension-pop-shell"
 			]
 		},
 		"exclude": {
