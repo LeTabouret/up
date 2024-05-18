@@ -4,12 +4,17 @@
 			"up": [
 				"virt-manager",
                 "qemu-kvm",
-                "libvirt",
                 "mesa-vulkan-drivers",
-                "steam",
                 "gnome-shell-extension-pop-shell"
 			]
 		},
+        "conflictedpackages": {
+            "up": [
+                "steam",
+                "libvirt",
+                "mesa-libEGL.i686"
+            ]
+        },
 		"exclude": {
 			"up": [
 				"firefox",
