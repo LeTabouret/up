@@ -10,7 +10,8 @@
 		},
         "conflictedpackages": {
             "up": [
-                "steam"
+                "steam",
+                "libvirt"
             ]
         },
 		"exclude": {
