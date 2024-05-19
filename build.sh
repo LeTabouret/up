@@ -54,7 +54,10 @@ fi
 
 # Install conflicted packages to resolve dependencies
 if [[ "${#CONFLICTED_PACKAGES[@]}" -gt 0 ]]; then
-    rpm-ostree install ${CONFLICTED_PACKAGES[@]}
+    rpm-ostree override replace \
+    --experimental \
+    --from repo=updates \
+    ${CONFLICTED_PACKAGES[@]} || true
 fi
 
 # check if any excluded packages are still present

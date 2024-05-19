@@ -10,9 +10,7 @@
 		},
         "conflictedpackages": {
             "up": [
-                "steam",
-                "libvirt",
-                "mesa-libEGL.i686"
+                "steam"
             ]
         },
 		"exclude": {
