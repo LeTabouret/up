@@ -3,15 +3,25 @@
 		"include": {
 			"up": [
 				"virt-manager",
+                "libvirt",
                 "qemu-kvm",
                 "mesa-vulkan-drivers",
-                "gnome-shell-extension-pop-shell"
+                "gnome-shell-extension-pop-shell",
+                "steam"
 			]
 		},
-        "conflictedpackages": {
+        "conflictedpackagesbase": {
             "up": [
-                "steam",
-                "libvirt"
+                "libatomic.i686",
+                "glibc.i686",
+                "libgcc.i686",
+                "libstdc++.i686"
+            ]
+        },
+        "conflictedpackagesupdates": {
+            "up": [
+                "vulkan-loader",
+                "gtk2.i686"
             ]
         },
 		"exclude": {
