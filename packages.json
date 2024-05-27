@@ -16,7 +16,8 @@
                 "glibc.i686",
                 "libgcc.i686",
                 "libstdc++.i686",
-		"pipewire-alsa.i686"
+		"pipewire-alsa.i686",
+		"pipewire-libs.i686"
             ]
         },
         "conflictedpackagesupdates": {
