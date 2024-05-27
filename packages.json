@@ -16,7 +16,8 @@
                 "glibc.i686",
                 "libgcc.i686",
                 "libstdc++.i686",
-		"pipewire-alsa.i686"
+		"pipewire-alsa.i686",
+		"pipewire-libs.i686"
             ]
         },
         "conflictedpackagesupdates": {
@@ -35,8 +36,7 @@
                 "gnome-shell-extension-window-list",
                 "gnome-shell-extension-background-logo",
                 "gnome-shell-extension-apps-menu",
-                "toolbox",
-		"pipewire-alsa"
+                "toolbox"
 			]
 		}
 	}
