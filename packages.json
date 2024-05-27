@@ -15,14 +15,13 @@
                 "libatomic.i686",
                 "glibc.i686",
                 "libgcc.i686",
-                "libstdc++.i686",
-		"pipewire-alsa"
+                "libstdc++.i686"
             ]
         },
         "conflictedpackagesupdates": {
             "up": [
                 "vulkan-loader",
-                "gtk2.i686"
+                "pipewire-alsa"
             ]
         },
 		"exclude": {
