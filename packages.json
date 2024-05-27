@@ -15,13 +15,13 @@
                 "libatomic.i686",
                 "glibc.i686",
                 "libgcc.i686",
-                "libstdc++.i686"
+                "libstdc++.i686",
+		"pipewire-alsa.i686"
             ]
         },
         "conflictedpackagesupdates": {
             "up": [
-                "vulkan-loader",
-                "pipewire-alsa"
+                "vulkan-loader"
             ]
         },
 		"exclude": {
@@ -35,7 +35,8 @@
                 "gnome-shell-extension-window-list",
                 "gnome-shell-extension-background-logo",
                 "gnome-shell-extension-apps-menu",
-                "toolbox"
+                "toolbox",
+		"pipewire-alsa"
 			]
 		}
 	}
