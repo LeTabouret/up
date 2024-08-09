@@ -9,6 +9,12 @@ COPY packages.json /tmp/packages.json
 COPY build.sh /tmp/build.sh
 RUN chmod +x /tmp/build.sh
 
+# Clone the Tela icon theme repository and run the installation script
+RUN git clone https://github.com/vinceliuice/Tela-icon-theme.git /tmp/Tela-icon-theme && \
+    cd /tmp/Tela-icon-theme && \
+    chmod +x install.sh && \
+    ./install.sh -d /usr/share/icons
+
 # Handle packages via packages.json
 RUN /tmp/build.sh
 
