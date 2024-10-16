@@ -1,5 +1,5 @@
 [org/gnome/shell]
-favorite-apps=['org.mozilla.firefox.desktop', 'org.gnome.Nautilus.desktop', 'steam.desktop', 'com.discordapp.Discord.desktop', 'org.gnome.Terminal.desktop', 'com.heroicgameslauncher.hgl.desktop', 'com.usebottles.bottles.desktop', 'virt-manager.desktop', 'com.github.tchx84.Flatseal.desktop', 'org.gnome.Software.desktop']
+favorite-apps=['io.github.zen_browser.zen.desktop', 'org.gnome.Nautilus.desktop', 'steam.desktop', 'com.discordapp.Discord.desktop', 'org.gnome.Terminal.desktop', 'com.heroicgameslauncher.hgl.desktop', 'com.usebottles.bottles.desktop', 'virt-manager.desktop', 'com.github.tchx84.Flatseal.desktop', 'org.gnome.Software.desktop']
 
 [org/gnome/desktop/peripherals/mouse]
 accel-profile='flat'
