@@ -15,7 +15,8 @@
                 "libatomic.i686",
                 "glibc.i686",
                 "libgcc.i686",
-                "libstdc++.i686"
+                "libstdc++.i686",
+		"systemd-libs.i686"
             ]
         },
         "conflictedpackagesupdates": {
