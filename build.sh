@@ -11,36 +11,10 @@ INCLUDED_PACKAGES=($(jq -r "[(.all.include | (select(.\"$PACKAGE_LIST\" != null)
                              (select(.\"$FEDORA_MAJOR_VERSION\" != null).\"$FEDORA_MAJOR_VERSION\".include | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[])] \
                              | sort | unique[]" /tmp/packages.json))
 
-# Build list of all packages requested for override
-CONFLICTED_PACKAGES=($(jq -r "[(.all.conflictedpackagesupdates | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[]), \
-                             (select(.\"$FEDORA_MAJOR_VERSION\" != null).\"$FEDORA_MAJOR_VERSION\".conflictedpackagesupdates | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[])] \
-                             | sort | unique[]" /tmp/packages.json))
-
- # Build list of all packages requested for override in base
-CONFLICTED_PACKAGES_BASE=($(jq -r "[(.all.conflictedpackagesbase | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[]), \
-                             (select(.\"$FEDORA_MAJOR_VERSION\" != null).\"$FEDORA_MAJOR_VERSION\".conflictedpackagesbase | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[])] \
-                             | sort | unique[]" /tmp/packages.json))
-
 # Build list of all packages requested for exclusion
 EXCLUDED_PACKAGES=($(jq -r "[(.all.exclude | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[]), \
                              (select(.\"$FEDORA_MAJOR_VERSION\" != null).\"$FEDORA_MAJOR_VERSION\".exclude | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[])] \
                              | sort | unique[]" /tmp/packages.json))
-
-
-# Install packages that are in base install and may generate conflicts
-if [[ "${#CONFLICTED_PACKAGES_BASE[@]}" -gt 0 ]]; then
-    rpm-ostree install \
-        ${CONFLICTED_PACKAGES_BASE[@]}
-fi
-
-# Install conflicted packages to resolve dependencies
-if [[ "${#CONFLICTED_PACKAGES[@]}" -gt 0 ]]; then
-    rpm-ostree override replace \
-    --experimental \
-    --from repo=updates \
-        ${CONFLICTED_PACKAGES[@]} \
-        || true
-fi
 
 # Ensure exclusion list only contains packages already present on image
 if [[ "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then

@@ -6,25 +6,9 @@
                 "libvirt",
                 "qemu-kvm",
                 "mesa-vulkan-drivers",
-                "gnome-shell-extension-pop-shell",
-		"xrandr",
                 "steam"
 			]
 		},
-        "conflictedpackagesbase": {
-            "up": [
-                "libatomic.i686",
-                "glibc.i686",
-                "libgcc.i686",
-                "libstdc++.i686",
-		"systemd-libs.i686"
-            ]
-        },
-        "conflictedpackagesupdates": {
-            "up": [
-                "vulkan-loader"
-            ]
-        },
 		"exclude": {
 			"up": [
 				"firefox",
