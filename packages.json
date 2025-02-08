@@ -3,24 +3,27 @@
 		"include": {
 			"up": [
 				"virt-manager",
-                "libvirt",
-                "qemu-kvm",
-                "mesa-vulkan-drivers",
-                "steam"
+		                "libvirt",
+		                "qemu-kvm",
+		                "mesa-vulkan-drivers",
+		                "steam",
+		                "pipewire-libs",
+		                "pipewire-alsa-1.2.7-1.fc41.i686",
+		                "libusb1-1.0.27-9.fc41.i686"
 			]
 		},
 		"exclude": {
 			"up": [
 				"firefox",
-                "firefox-langpacks",
-                "gnome-classic-session",
-                "gnome-classic-session-xsession",
-                "gnome-shell-extension-launch-new-instance",
-                "gnome-shell-extension-places-menu",
-                "gnome-shell-extension-window-list",
-                "gnome-shell-extension-background-logo",
-                "gnome-shell-extension-apps-menu",
-                "toolbox"
+		                "firefox-langpacks",
+		                "gnome-classic-session",
+		                "gnome-classic-session-xsession",
+		                "gnome-shell-extension-launch-new-instance",
+		                "gnome-shell-extension-places-menu",
+		                "gnome-shell-extension-window-list",
+		                "gnome-shell-extension-background-logo",
+		                "gnome-shell-extension-apps-menu",
+		                "toolbox"
 			]
 		}
 	}
