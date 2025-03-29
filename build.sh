@@ -30,7 +30,7 @@ if [[ "${#INCLUDED_PACKAGES[@]}" -gt 0 && "${#EXCLUDED_PACKAGES[@]}" -eq 0 ]]; t
 elif [[ "${#INCLUDED_PACKAGES[@]}" -gt 0 && "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then
     dnf5 -y remove \
         ${EXCLUDED_PACKAGES[@]} \
-        $(printf -- "--install=%s " ${INCLUDED_PACKAGES[@]})
+        $(printf -- ${INCLUDED_PACKAGES[@]})
 
 else
     echo "No packages to install."
