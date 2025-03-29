@@ -6,9 +6,7 @@
 		                "libvirt",
 		                "qemu-kvm",
 		                "mesa-vulkan-drivers",
-		                "steam",
-		                "pipewire-libs",
-																		 "libsystemd.so.0"
+		                "steam"
 			]
 		},
 		"exclude": {
