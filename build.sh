@@ -1,54 +1,58 @@
 #!/bin/sh
 
-set -ouex pipefail
+set -oue pipefail
 
 RELEASE="$(rpm -E %fedora)"
 PACKAGE_LIST="up"
 FEDORA_MAJOR_VERSION=$RELEASE
+PACKAGES_JSON="/tmp/packages.json"
 
-# Build list of all packages requested for inclusion
-INCLUDED_PACKAGES=($(jq -r "[(.all.include | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[]), \
-                             (select(.\"$FEDORA_MAJOR_VERSION\" != null).\"$FEDORA_MAJOR_VERSION\".include | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[])] \
-                             | sort | unique[]" /tmp/packages.json))
+# 🧩 Récupère les packages à inclure
+INCLUDED_PACKAGES=($(jq -r "
+  (
+    try .all.include.\"$PACKAGE_LIST\" // [],
+    try .\"$FEDORA_MAJOR_VERSION\".include.\"$PACKAGE_LIST\" // []
+  ) | sort | unique[]" "$PACKAGES_JSON"))
 
-# Build list of all packages requested for exclusion
-EXCLUDED_PACKAGES=($(jq -r "[(.all.exclude | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[]), \
-                             (select(.\"$FEDORA_MAJOR_VERSION\" != null).\"$FEDORA_MAJOR_VERSION\".exclude | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[])] \
-                             | sort | unique[]" /tmp/packages.json))
+# 🧩 Récupère les packages à exclure
+EXCLUDED_PACKAGES=($(jq -r "
+  (
+    try .all.exclude.\"$PACKAGE_LIST\" // [],
+    try .\"$FEDORA_MAJOR_VERSION\".exclude.\"$PACKAGE_LIST\" // []
+  ) | sort | unique[]" "$PACKAGES_JSON"))
 
-echo "${INCLUDED_PACKAGES[@]}"
-# Ensure exclusion list only contains packages already present on image
+echo "✅ Packages à inclure : ${INCLUDED_PACKAGES[*]}"
+echo "❌ Packages à exclure : ${EXCLUDED_PACKAGES[*]}"
+
+# 🧼 Filtrer les paquets exclus déjà présents sur l'image
 if [[ "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then
-    EXCLUDED_PACKAGES=($(rpm -qa --queryformat='%{NAME} ' ${EXCLUDED_PACKAGES[@]}))
-fi
-
-# Simple case to install where no packages need excluding
-if [[ "${#INCLUDED_PACKAGES[@]}" -gt 0 && "${#EXCLUDED_PACKAGES[@]}" -eq 0 ]]; then
-    dnf5 -y install \
-        ${INCLUDED_PACKAGES[@]}
-
-# Install/excluded packages both at same time
-elif [[ "${#INCLUDED_PACKAGES[@]}" -gt 0 && "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then
-    dnf5 -y remove \
-        ${EXCLUDED_PACKAGES[@]} \
-        $(printf -- ${INCLUDED_PACKAGES[@]})
-
+    INSTALLED_EXCLUDED=($(rpm -qa --queryformat='%{NAME} ' "${EXCLUDED_PACKAGES[@]}" | tr ' ' '\n' | sort -u))
 else
-    echo "No packages to install."
+    INSTALLED_EXCLUDED=()
 fi
 
-# Check if any excluded packages are still present
-# (this can happen if an included package pulls in a dependency)
-EXCLUDED_PACKAGES=($(jq -r "[(.all.exclude | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[]), \
-                             (select(.\"$FEDORA_MAJOR_VERSION\" != null).\"$FEDORA_MAJOR_VERSION\".exclude | (select(.\"$PACKAGE_LIST\" != null).\"$PACKAGE_LIST\")[])] \
-                             | sort | unique[]" /tmp/packages.json))
-
-if [[ "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then
-    EXCLUDED_PACKAGES=($(rpm -qa --queryformat='%{NAME} ' ${EXCLUDED_PACKAGES[@]}))
+# ✅ Installation des paquets inclus (s'ils ne sont pas déjà installés)
+if [[ "${#INCLUDED_PACKAGES[@]}" -gt 0 ]]; then
+    echo "📦 Installation des paquets inclus..."
+    dnf5 -y install "${INCLUDED_PACKAGES[@]}"
+else
+    echo "ℹ️ Aucun paquet à inclure."
 fi
 
-# Remove any excluded packages which are still present on image
-if [[ "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then
-    dnf5 -y remove \
-        ${EXCLUDED_PACKAGES[@]}
+# ❌ Suppression des paquets exclus (présents)
+if [[ "${#INSTALLED_EXCLUDED[@]}" -gt 0 ]]; then
+    echo "🧹 Suppression des paquets exclus présents..."
+    dnf5 -y remove "${INSTALLED_EXCLUDED[@]}"
+else
+    echo "✅ Aucun paquet exclu présent à supprimer."
+fi
+
+# 🔁 Vérification finale : des exclus pourraient être revenus via des dépendances
+FINAL_INSTALLED_EXCLUDED=($(rpm -qa --queryformat='%{NAME} ' "${EXCLUDED_PACKAGES[@]}" | tr ' ' '\n' | sort -u))
+
+if [[ "${#FINAL_INSTALLED_EXCLUDED[@]}" -gt 0 ]]; then
+    echo "🚨 Nettoyage final : certains paquets exclus sont encore là : ${FINAL_INSTALLED_EXCLUDED[*]}"
+    dnf5 -y remove "${FINAL_INSTALLED_EXCLUDED[@]}"
+else
+    echo "🎉 Aucun paquet exclu restant après vérification."
 fi
