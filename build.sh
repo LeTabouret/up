@@ -23,12 +23,12 @@ fi
 
 # Simple case to install where no packages need excluding
 if [[ "${#INCLUDED_PACKAGES[@]}" -gt 0 && "${#EXCLUDED_PACKAGES[@]}" -eq 0 ]]; then
-    rpm-ostree install \
+    dnf5 install \
         ${INCLUDED_PACKAGES[@]}
 
 # Install/excluded packages both at same time
 elif [[ "${#INCLUDED_PACKAGES[@]}" -gt 0 && "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then
-    rpm-ostree override remove \
+    dnf5 override remove \
         ${EXCLUDED_PACKAGES[@]} \
         $(printf -- "--install=%s " ${INCLUDED_PACKAGES[@]})
 
@@ -48,6 +48,6 @@ fi
 
 # Remove any excluded packages which are still present on image
 if [[ "${#EXCLUDED_PACKAGES[@]}" -gt 0 ]]; then
-    rpm-ostree override remove \
+    dnf5 override remove \
         ${EXCLUDED_PACKAGES[@]}
 fi
