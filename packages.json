@@ -5,6 +5,7 @@
 				"virt-manager",
 				"libvirt",
 				"qemu-kvm",
+				"refind",
 				"mesa-vulkan-drivers",
 				"steam",               
 				"steam-devices",      
