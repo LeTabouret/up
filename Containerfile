@@ -9,6 +9,18 @@ COPY packages.json /tmp/packages.json
 COPY build.sh /tmp/build.sh
 RUN chmod +x /tmp/build.sh
 
+# Install CachyOS Kernel for Fedora
+RUN set -eux; \
+    cd /etc/yum.repos.d && \
+    wget "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos/repo/fedora-$(rpm -E %fedora)/bieszczaders-kernel-cachyos-fedora-$(rpm -E %fedora).repo" && \
+    rpm-ostree override remove \
+        kernel \
+        kernel-core \
+        kernel-modules \
+        kernel-modules-core \
+        kernel-modules-extra \
+        --install kernel-cachyos
+
 # Clone the Tela icon theme repository and run the installation script
 RUN git clone https://github.com/vinceliuice/Tela-icon-theme.git /tmp/Tela-icon-theme && \
     cd /tmp/Tela-icon-theme && \
