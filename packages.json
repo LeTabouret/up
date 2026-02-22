@@ -13,6 +13,13 @@
 				"steam-devices",      
 				"gamemode", 
 				"gamescope",
+				"mangohud",
+				"mangohud.i686",
+				"vkBasalt",
+				"vkBasalt.i686",
+				"libFAudio.i686",
+				"openxr",
+				"evtest",
 				"vulkan-tools"
 			]
 		},
