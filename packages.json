@@ -6,11 +6,14 @@
 				"libvirt",
 				"qemu-kvm",
 				"rEFInd",
+				"mesa-dri-drivers.i686",
 				"mesa-vulkan-drivers",
+				"mesa-vulkan-drivers.i686",
 				"steam",               
 				"steam-devices",      
 				"gamemode", 
-				"gamescope"
+				"gamescope",
+				"vulkan-tools"
 			]
 		},
 		"exclude": {
