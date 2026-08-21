@@ -1,53 +1,66 @@
 #!/usr/bin/bash
 
-# Script Version
-VER=5
-VER_FILE="${XDG_DATA_HOME:-$HOME/.local/share}/ublue/flatpak_manager_version"
-VER_RAN=$(cat $VER_FILE)
+set -euo pipefail
 
-mkdir -p "$(dirname "$VER_FILE")" || exit 1
+readonly CONFIG_DIR="${FLATPAK_MANAGER_CONFIG_DIR:-/etc/flatpak/user}"
+readonly INSTALL_FILE="${CONFIG_DIR}/install"
+readonly REMOVE_FILE="${CONFIG_DIR}/remove"
+readonly REMOTE_FILE="${FLATPAK_MANAGER_REMOTE_FILE:-/etc/flatpak/remotes.d/flathub.flatpakrepo}"
+readonly STATE_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/ublue"
+readonly STATE_FILE="${FLATPAK_MANAGER_STATE_FILE:-${STATE_DIR}/flatpak-manager.sha256}"
+readonly SCRIPT_FILE="${BASH_SOURCE[0]}"
 
-# Upgrade from v1 to v2 changes only the location of the VER_FILE.
-# Exit if v1 file is present.
-VER_1_FILE="$HOME/.ublue_flatpak_manager_version"
-if [[ -f $VER_1_FILE  ]]; then
-  echo "Networked tasks v$VER has already ran. Exiting..."
-  rm $VER_1_FILE
-  echo $VER > $VER_FILE
-  exit 0
-fi
+read_list() {
+    local file="$1"
+    [[ -f "$file" ]] || return 0
+    sed -e 's/[[:space:]]*#.*$//' -e '/^[[:space:]]*$/d' "$file"
+}
 
-# Run script if updated
-if [[ -f $VER_FILE && $VER = $VER_RAN ]]; then
-  echo "Flatpak manager v$VER has already ran. Exiting..."
-  exit 0
-fi
+desired_state_hash() {
+    {
+        sha256sum "$SCRIPT_FILE"
+        for file in "$INSTALL_FILE" "$REMOVE_FILE"; do
+            [[ -f "$file" ]] && sha256sum "$file" || printf 'missing  %s\n' "$file"
+        done
+    } | sha256sum | cut -d' ' -f1
+}
 
-# Enable Flathub
-if grep -qz 'fedora' <<< $(flatpak remotes); then
-  flatpak remote-delete --user fedora --force
-fi
-flatpak remote-add --if-not-exists --user flathub /usr/etc/flatpak/remotes.d/flathub.flatpakrepo
-flatpak remote-modify --user --enable --prio=2 flathub
+main() {
+    local desired_hash previous_hash="" application
+    local -a install_list=() remove_list=() installed_removals=()
 
-# Lists of flatpaks
-FLATPAK_LIST=$(flatpak list --columns=application)
-INSTALL_LIST=$(cat /etc/flatpak/user/install)
-REMOVE_LIST=$(cat /etc/flatpak/user/remove)
+    mapfile -t install_list < <(read_list "$INSTALL_FILE")
+    mapfile -t remove_list < <(read_list "$REMOVE_FILE")
+    desired_hash="$(desired_state_hash)"
+    [[ -f "$STATE_FILE" ]] && read -r previous_hash <"$STATE_FILE"
+    if [[ "$desired_hash" == "$previous_hash" ]]; then
+        echo "Flatpak desired state is already reconciled."
+        return 0
+    fi
 
-# Install flatpaks in list
-if [[ -n $INSTALL_LIST ]]; then
-  if ! flatpak install --user --noninteractive flathub ${INSTALL_LIST[@]}; then
-    # exit on error
-    exit 1
-  fi
-fi
+    mkdir -p "$STATE_DIR"
+    if flatpak remotes --user --columns=name | grep -Fxq fedora; then
+        flatpak remote-delete --user --force fedora
+    fi
+    flatpak remote-add --user --if-not-exists flathub "$REMOTE_FILE"
+    flatpak remote-modify --user --enable --prio=2 flathub
 
-# Remove flatpaks in list once
-if [[ ! -f $VER_FILE && -n $REMOVE_LIST ]]; then
-  flatpak remove --user --noninteractive ${REMOVE_LIST[@]}
-fi
+    if ((${#install_list[@]} > 0)); then
+        flatpak install --user --noninteractive --or-update -- flathub "${install_list[@]}"
+    fi
+    for application in "${remove_list[@]}"; do
+        if flatpak info --user "$application" >/dev/null 2>&1; then
+            installed_removals+=("$application")
+        fi
+    done
+    if ((${#installed_removals[@]} > 0)); then
+        flatpak uninstall --user --noninteractive -- "${installed_removals[@]}"
+    fi
 
-notify-send "Flatpak installer" "Finished installing user flatpaks" --app-name="Flatpak installer" -u NORMAL
+    printf '%s\n' "$desired_hash" >"${STATE_FILE}.tmp"
+    mv -f "${STATE_FILE}.tmp" "$STATE_FILE"
+    notify-send "Flatpak installer" "Finished reconciling user Flatpaks" \
+        --app-name="Flatpak installer" --urgency=normal 2>/dev/null || true
+}
 
-echo $VER > $VER_FILE
+main "$@"
