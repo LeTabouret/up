@@ -9,9 +9,29 @@ readonly MAX_REMOVALS="${MAX_REMOVALS:-50}"
 read_packages() {
     local operation="$1"
     local fedora_release="$2"
-    jq -er --arg list "$PACKAGE_LIST" --arg release "$fedora_release" --arg operation "$operation" '
+    jq -r --arg list "$PACKAGE_LIST" --arg release "$fedora_release" --arg operation "$operation" '
         [(.all[$operation][$list] // [])[], (.[$release][$operation][$list] // [])[]] | unique[]
     ' "$PACKAGES_JSON"
+}
+
+load_packages() {
+    local operation="$1"
+    local fedora_release="$2"
+    local result_name="$3"
+    local output
+    local -n result="$result_name"
+
+    # Command substitution propagates read_packages/jq failure through the
+    # assignment. Process substitution used directly with mapfile does not.
+    if ! output="$(read_packages "$operation" "$fedora_release")"; then
+        printf 'Failed to load %s packages from %s.\n' "$operation" "$PACKAGES_JSON" >&2
+        return 1
+    fi
+
+    result=()
+    if [[ -n "$output" ]]; then
+        mapfile -t result <<<"$output"
+    fi
 }
 
 installed_packages() {
@@ -55,8 +75,8 @@ main() {
     local -a excluded=()
 
     fedora_release="$(rpm -E '%fedora')"
-    mapfile -t included < <(read_packages include "$fedora_release")
-    mapfile -t excluded < <(read_packages exclude "$fedora_release")
+    load_packages include "$fedora_release" included
+    load_packages exclude "$fedora_release" excluded
     printf 'Packages to install: %s\n' "${included[*]:-(none)}"
     printf 'Packages to exclude: %s\n' "${excluded[*]:-(none)}"
 

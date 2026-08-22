@@ -19,9 +19,6 @@ RUN --mount=type=bind,from=context,source=/,target=/ctx \
     --mount=type=tmpfs,target=/tmp \
     cp -a /ctx/etc/. /etc/ && \
     cp -a /ctx/usr/. /usr/ && \
-    if [ -d /usr/etc ]; then \
-      find /usr/etc -depth -type d -empty -delete; \
-    fi && \
     cp /ctx/packages.json /tmp/packages.json && \
     /ctx/build.sh && \
     curl --fail --location --silent --show-error \

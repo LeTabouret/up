@@ -6,7 +6,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
 trap 'rm -rf "$test_root"' EXIT
 mkdir -p "$test_root/bin" "$test_root/config" "$test_root/data"
-printf 'app.one\n' >"$test_root/config/install"
+printf 'app.one\napp.two\n' >"$test_root/config/install"
 : >"$test_root/config/remove"
 touch "$test_root/remote"
 
@@ -29,23 +29,30 @@ manager="$repo_root/usr/libexec/ublue-user-flatpak-manager"
 "$manager"
 state_file="$test_root/data/ublue/flatpak-manager.sha256"
 [[ -s "$state_file" ]]
-first_count="$(wc -l <"$TEST_LOG")"
-"$manager"
-[[ "$(wc -l <"$TEST_LOG")" == "$first_count" ]]
+grep -q 'install.*app.one.*app.two' "$TEST_LOG"
 
-printf 'app.one\napp.two\n' >"$test_root/config/install"
+: >"$TEST_LOG"
 "$manager"
-grep -q 'app.two' "$TEST_LOG"
+[[ ! -s "$TEST_LOG" ]]
 
-before_removed_install="$(wc -l <"$TEST_LOG")"
-printf 'app.one\n' >"$test_root/config/install"
+printf 'app.one\napp.two\napp.three\n' >"$test_root/config/install"
 "$manager"
-[[ "$(wc -l <"$TEST_LOG")" -gt "$before_removed_install" ]]
+grep -q 'install.*app.three' "$TEST_LOG"
 
-printf 'remove.me\n' >"$test_root/config/remove"
-printf 'remove.me\n' >"$TEST_INSTALLED"
+: >"$TEST_LOG"
+printf 'app.two\n' >"$test_root/config/remove"
+printf 'app.two\nuser.unmanaged\n' >"$TEST_INSTALLED"
 "$manager"
-grep -q 'uninstall.*remove.me' "$TEST_LOG"
+grep -q 'uninstall.*app.two' "$TEST_LOG"
+if grep -q 'uninstall.*user.unmanaged' "$TEST_LOG"; then
+    echo "Unlisted user-managed application was unexpectedly removed." >&2
+    exit 1
+fi
+
+: >"$TEST_LOG"
+printf '\n# changed remote definition\n' >>"$test_root/remote"
+"$manager"
+grep -q 'remote-add' "$TEST_LOG"
 
 printf 'app.fail\n' >>"$test_root/config/install"
 old_state="$(<"$state_file")"
@@ -57,4 +64,4 @@ fi
 "$manager"
 [[ "$(<"$state_file")" != "$old_state" ]]
 
-echo "Flatpak reconciliation tests passed."
+echo "Flatpak configuration tests passed."

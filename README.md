@@ -3,7 +3,7 @@
 `up` is an x86_64 Fedora 44 Atomic desktop image derived from Universal Blue
 Silverblue. It targets a personal GNOME workstation used for gaming, desktop
 applications, and libvirt/QEMU virtualization. The host stays image-managed:
-RPMs and defaults are composed into `/usr`, GUI applications are reconciled as
+RPMs and defaults are composed into `/usr`, and managed GUI applications are applied as
 per-user Flatpaks, and development tools belong in containers.
 
 ## Architecture
@@ -15,14 +15,15 @@ GitHub main/schedule ─→ tests ─→ container build ─→ bootc lint
 Universal Blue Silverblue (digest pinned)
   └─→ RPM customization + image-owned /usr defaults
        ├─→ boot-time dconf database compilation
-       └─→ login-time user Flatpak reconciliation
+       └─→ login-time application of changed Flatpak configuration
 ```
 
 The `Containerfile` runs only while composing an image. `build.sh` reads
 `packages.json`, installs requested RPMs, and removes only explicitly named,
 installed exclusions. `usr/` becomes image-owned content. The system dconf unit
-runs at boot; the Flatpak user unit runs after login and retries transient
-failures. GitHub Actions validates all events, but only trusted default-branch
+runs at boot; the Flatpak user unit runs after login, reapplies the managed
+configuration only when its inputs change, and retries transient failures.
+GitHub Actions validates all events, but only trusted default-branch
 builds receive registry credentials, production tags, and signatures.
 
 ## Features and package policy
@@ -81,7 +82,12 @@ recovery. Never commit `cosign.key`.
 
 - Change RPMs in `packages.json`. Removal has a 50-package safety ceiling.
 - Change desired applications in `etc/flatpak/user/{install,remove}`. A
-  content hash triggers reconciliation and is recorded only after success.
+  content hash triggers configuration application and is recorded only after success.
+  The install list ensures apps are installed when this configuration changes;
+  the remove list explicitly removes apps then. Unlisted apps and later user
+  choices are otherwise unmanaged, so the service does not fight user changes
+  on every login. The manager script and Flathub remote definition are also
+  included in the state hash.
 - Change GNOME defaults in `etc/dconf/db/local.d/01-ublue`.
 - Run `tests/validate.sh` before committing (requires `jq`, ShellCheck, shfmt,
   Bash, and optionally systemd tools).
@@ -109,10 +115,10 @@ The repository's Apache-2.0 license does not replace upstream asset licenses.
 | File | Execution time | Role |
 | --- | --- | --- |
 | `Containerfile` | Image build | Pinned base, customization, bootc lint |
-| `build.sh` / `packages.json` | Image build | Defensive RPM desired state |
-| `.github/workflows/build-modern.yml` | CI | Validate, build, publish, sign |
+| `build.sh` / `packages.json` | Image build | Defensive RPM package configuration |
+| `.github/workflows/build.yml` | CI | Validate, build, publish, sign |
 | `usr/lib/systemd/system/dconf-update.service` | Boot | Compile dconf defaults |
-| `usr/lib/systemd/user/ublue-user-flatpak-manager.service` | Login | Retry reconciliation |
-| `usr/libexec/ublue-user-flatpak-manager` | Login | User Flatpak desired state |
+| `usr/lib/systemd/user/ublue-user-flatpak-manager.service` | Login | Retry changed configuration |
+| `usr/libexec/ublue-user-flatpak-manager` | Login | Apply managed Flatpak configuration |
 | `etc/modules-load.d/*` | Boot | Preload controller HID drivers |
 | `cosign.pub` | Verification | Public half of the signing key |

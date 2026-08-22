@@ -1,5 +1,5 @@
 [Unit]
-Description=Reconcile user Flatpaks with the image desired state
+Description=Apply image-managed Flatpak configuration when it changes
 Documentation=https://github.com/LeTabouret/up
 StartLimitIntervalSec=300
 StartLimitBurst=5

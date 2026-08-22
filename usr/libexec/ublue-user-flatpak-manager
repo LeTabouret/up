@@ -19,7 +19,7 @@ read_list() {
 desired_state_hash() {
     {
         sha256sum "$SCRIPT_FILE"
-        for file in "$INSTALL_FILE" "$REMOVE_FILE"; do
+        for file in "$INSTALL_FILE" "$REMOVE_FILE" "$REMOTE_FILE"; do
             [[ -f "$file" ]] && sha256sum "$file" || printf 'missing  %s\n' "$file"
         done
     } | sha256sum | cut -d' ' -f1
@@ -34,7 +34,7 @@ main() {
     desired_hash="$(desired_state_hash)"
     [[ -f "$STATE_FILE" ]] && read -r previous_hash <"$STATE_FILE"
     if [[ "$desired_hash" == "$previous_hash" ]]; then
-        echo "Flatpak desired state is already reconciled."
+        echo "Managed Flatpak configuration is unchanged."
         return 0
     fi
 
@@ -59,7 +59,7 @@ main() {
 
     printf '%s\n' "$desired_hash" >"${STATE_FILE}.tmp"
     mv -f "${STATE_FILE}.tmp" "$STATE_FILE"
-    notify-send "Flatpak installer" "Finished reconciling user Flatpaks" \
+    notify-send "Flatpak installer" "Finished applying managed user Flatpak configuration" \
         --app-name="Flatpak installer" --urgency=normal 2>/dev/null || true
 }
 
