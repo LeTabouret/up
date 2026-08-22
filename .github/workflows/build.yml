@@ -56,13 +56,19 @@ jobs:
     permissions:
       contents: read
       packages: write
-    env:
-      # Podman and Cosign must share the same Docker-compatible GHCR credentials.
-      DOCKER_CONFIG: ${{ runner.temp }}/docker
-      REGISTRY_AUTH_FILE: ${{ runner.temp }}/docker/config.json
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Prepare shared registry authentication
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker_config="${RUNNER_TEMP}/docker"
+          mkdir -p "${docker_config}"
+          {
+            echo "DOCKER_CONFIG=${docker_config}"
+            echo "REGISTRY_AUTH_FILE=${docker_config}/config.json"
+          } >> "${GITHUB_ENV}"
       - name: Prepare image coordinates and tags
         id: image
         shell: bash
