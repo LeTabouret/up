@@ -6,13 +6,17 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
 trap 'rm -rf "$test_root"' EXIT
 export PACKAGES_JSON="${test_root}/packages.json"
-printf '{"all":{"include":{"up":[]},"exclude":{"up":[]}}}\n' >"$PACKAGES_JSON"
-# shellcheck source=../build.sh
+printf '{"all":{"include":{"up":[]},"exclude":{"up":[]}}}\n' > "$PACKAGES_JSON"
+# The test resolves the repository root dynamically before sourcing build.sh.
+# shellcheck disable=SC1091
 source "${repo_root}/build.sh"
 
 calls=()
 rpm() {
-    [[ "$1" == "-q" ]] || { echo "unsafe rpm invocation: $*" >&2; return 99; }
+    [[ "$1" == "-q" ]] || {
+        echo "unsafe rpm invocation: $*" >&2
+        return 99
+    }
     local package="${*: -1}"
     [[ "$package" == pkg* ]] && return 0
     [[ " installed partial " == *" ${package} "* ]]
@@ -26,12 +30,12 @@ load_packages exclude 44 excluded
 ((${#included[@]} == 0))
 ((${#excluded[@]} == 0))
 
-printf '{ malformed json\n' >"$PACKAGES_JSON"
-if load_packages include 44 included 2>/dev/null; then
+printf '{ malformed json\n' > "$PACKAGES_JSON"
+if load_packages include 44 included 2> /dev/null; then
     echo "Malformed packages.json unexpectedly loaded." >&2
     exit 1
 fi
-printf '{"all":{"include":{"up":[]},"exclude":{"up":[]}}}\n' >"$PACKAGES_JSON"
+printf '{"all":{"include":{"up":[]},"exclude":{"up":[]}}}\n' > "$PACKAGES_JSON"
 
 remove_packages empty
 ((${#calls[@]} == 0))

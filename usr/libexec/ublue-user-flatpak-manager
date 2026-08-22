@@ -32,7 +32,7 @@ main() {
     mapfile -t install_list < <(read_list "$INSTALL_FILE")
     mapfile -t remove_list < <(read_list "$REMOVE_FILE")
     desired_hash="$(desired_state_hash)"
-    [[ -f "$STATE_FILE" ]] && read -r previous_hash <"$STATE_FILE"
+    [[ -f "$STATE_FILE" ]] && read -r previous_hash < "$STATE_FILE"
     if [[ "$desired_hash" == "$previous_hash" ]]; then
         echo "Managed Flatpak configuration is unchanged."
         return 0
@@ -49,7 +49,7 @@ main() {
         flatpak install --user --noninteractive --or-update -- flathub "${install_list[@]}"
     fi
     for application in "${remove_list[@]}"; do
-        if flatpak info --user "$application" >/dev/null 2>&1; then
+        if flatpak info --user "$application" > /dev/null 2>&1; then
             installed_removals+=("$application")
         fi
     done
@@ -57,10 +57,10 @@ main() {
         flatpak uninstall --user --noninteractive -- "${installed_removals[@]}"
     fi
 
-    printf '%s\n' "$desired_hash" >"${STATE_FILE}.tmp"
+    printf '%s\n' "$desired_hash" > "${STATE_FILE}.tmp"
     mv -f "${STATE_FILE}.tmp" "$STATE_FILE"
     notify-send "Flatpak installer" "Finished applying managed user Flatpak configuration" \
-        --app-name="Flatpak installer" --urgency=normal 2>/dev/null || true
+        --app-name="Flatpak installer" --urgency=normal 2> /dev/null || true
 }
 
 main "$@"

@@ -30,7 +30,9 @@ load_packages() {
 
     result=()
     if [[ -n "$output" ]]; then
-        mapfile -t result <<<"$output"
+        # ShellCheck cannot infer that this nameref updates the caller's array.
+        # shellcheck disable=SC2034
+        mapfile -t result <<< "$output"
     fi
 }
 
