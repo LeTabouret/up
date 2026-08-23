@@ -14,6 +14,17 @@
     {
       "matchManagers": ["github-actions"],
       "pinDigests": true
+    },
+    {
+      "description": "Automerge trusted Universal Blue image digest updates after CI",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/ublue-os/akmods",
+        "ghcr.io/ublue-os/silverblue-main"
+      ],
+      "matchUpdateTypes": ["digest"],
+      "automerge": true,
+      "automergeType": "pr"
     }
   ]
 }

@@ -45,6 +45,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Build and run bootc lint
         run: podman build --tag up:pr --file Containerfile .
+      - name: Verify OGC kernel in pull request image
+        run: |
+          podman run --rm up:pr bash -euo pipefail -c '
+            mapfile -t packages </usr/share/up/ogc-kernel-packages
+            ((${#packages[@]} >= 5))
+            rpm -q "${packages[@]}"
+          '
 
   publish:
     name: Build, publish, and sign
@@ -83,6 +90,13 @@ jobs:
           } >>"${GITHUB_OUTPUT}"
       - name: Build and run bootc lint
         run: podman build --tag "${IMAGE_NAME}:build" --file Containerfile .
+      - name: Verify OGC kernel in publish image
+        run: |
+          podman run --rm "${IMAGE_NAME}:build" bash -euo pipefail -c '
+            mapfile -t packages </usr/share/up/ogc-kernel-packages
+            ((${#packages[@]} >= 5))
+            rpm -q "${packages[@]}"
+          '
       - name: Log in to GHCR
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}

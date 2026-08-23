@@ -3,8 +3,8 @@
 `up` is an x86_64 Fedora 44 Atomic desktop image derived from Universal Blue
 Silverblue. It targets a personal GNOME workstation used for gaming, desktop
 applications, and libvirt/QEMU virtualization. The host stays image-managed:
-RPMs and defaults are composed into `/usr`, and managed GUI applications are applied as
-per-user Flatpaks, and development tools belong in containers.
+RPMs and defaults are composed into `/usr`, managed GUI applications are applied
+as per-user Flatpaks, and development tools belong in containers.
 
 ## Architecture
 
@@ -13,6 +13,8 @@ GitHub pull request ─→ tests ─→ container build ─→ bootc lint (no pu
 GitHub main/schedule ─→ tests ─→ container build ─→ bootc lint
                                                └─→ GHCR tags ─→ Cosign digest signature
 Universal Blue Silverblue (digest pinned)
+  ├─→ Universal Blue OGC kernel artifact (digest pinned)
+  │    └─→ replace Fedora kernel during image composition
   └─→ RPM customization + image-owned /usr defaults
        ├─→ boot-time dconf database compilation
        └─→ login-time application of changed Flatpak configuration
@@ -25,6 +27,52 @@ runs at boot; the Flatpak user unit runs after login, reapplies the managed
 configuration only when its inputs change, and retries transient failures.
 GitHub Actions validates all events, but only trusted default-branch
 builds receive registry credentials, production tags, and signatures.
+
+## Open Gaming Collective kernel
+
+This image replaces Fedora's stock kernel at composition time with the Open
+Gaming Collective (OGC) kernel from Universal Blue's prebuilt
+`ghcr.io/ublue-os/akmods:ogc-44` OCI artifact. Both the Silverblue base and OGC
+artifact are digest-pinned. Renovate proposes and, after required CI succeeds,
+automatically merges digest-only updates for these two trusted Universal Blue
+streams. Only the OGC kernel RPMs are consumed: this does not turn the image
+into Bazzite or add
+Bazzite services, branding, sessions, schedulers, or extra kernel modules.
+
+Check the running kernel after booting the image:
+
+```bash
+uname -r
+```
+
+The release should have the form `*-ogc*.fc44.x86_64`. The installer discovers
+the kernel family from RPM metadata, including every supplied
+`kernel-modules-*` and `kernel-devel-*` subpackage. It fails unless all selected
+packages are OGC Fedora 44 builds of one release, all required components are
+present, and no unrelated kernel-family RPM remains after installation. The
+exact installed package list is recorded in
+`/usr/share/up/ogc-kernel-packages` for CI verification.
+
+### Secure Boot
+
+Universal Blue signs the OGC kernel with its kernel-signing certificate. The
+pinned Silverblue base already includes that certificate at
+`/etc/pki/akmods/certs/akmods-ublue.der`; its subject is `CN=ublue kernel`. The
+certificate still must be trusted by the machine's UEFI/MOK database. Existing
+Universal Blue installations that previously enrolled the same key do not need
+to enroll it again.
+
+Check Secure Boot and key enrollment without changing the machine:
+
+```bash
+mokutil --sb-state
+sudo mokutil --test-key /etc/pki/akmods/certs/akmods-ublue.der
+```
+
+If Secure Boot is enabled and the key is not enrolled, firmware/shim will refuse
+to boot the OGC kernel. Do not disable Secure Boot. Follow Universal Blue's
+documented MOK enrollment procedure, or retain the previous deployment and use
+the rollback commands below. This repository does not enroll keys automatically.
 
 ## Features and package policy
 
@@ -69,7 +117,7 @@ CI signs the immutable manifest digest with the repository's existing Cosign
 key. Verify a published digest (preferred) or tag with:
 
 ```bash
-cosign verify --key cosign.pub --new-bundle-format=false \
+cosign verify --key cosign.pub \
   ghcr.io/letabouret/up@sha256:REPLACE_WITH_DIGEST
 ```
 
@@ -97,7 +145,25 @@ recovery. Never commit `cosign.key`.
 Pull requests validate and build without publishing. Other events publish only
 from the repository default branch. History tags combine Fedora version, UTC
 date, and short Git SHA; `44` and `latest` remain moving aliases. Renovate tracks
-the base digest and immutable GitHub Action references.
+the Silverblue and OGC artifact digests and immutable GitHub Action references.
+
+### Renovate automerge safety
+
+Renovate PR automerge is limited to digest updates for
+`ghcr.io/ublue-os/akmods` and `ghcr.io/ublue-os/silverblue-main`. Tags remain
+`ogc-44` and `44`, so moving to Fedora 45 remains a manual, reviewed change.
+Renovate does not ignore tests and cannot safely automerge unless GitHub branch
+protection for `main` requires these pull-request checks:
+
+- `Static validation and tests`
+- `Build pull request image`
+
+Configure those exact check names in GitHub under **Settings → Branches → main
+→ Require status checks to pass before merging**. Keep the branch up-to-date
+requirement enabled. The first check covers JSON, shell, package, Flatpak, and
+OGC static tests; the second builds the complete image, verifies every OGC RPM
+listed by the image, and runs `bootc container lint` during the build. A failed
+or pending required check therefore leaves the Renovate PR open.
 
 ## Third-party content
 
@@ -115,6 +181,7 @@ The repository's Apache-2.0 license does not replace upstream asset licenses.
 | File | Execution time | Role |
 | --- | --- | --- |
 | `Containerfile` | Image build | Pinned base, customization, bootc lint |
+| `install-ogc-kernel.sh` | Image build | Defensive OGC kernel replacement and verification |
 | `build.sh` / `packages.json` | Image build | Defensive RPM package configuration |
 | `.github/workflows/build.yml` | CI | Validate, build, publish, sign |
 | `usr/lib/systemd/system/dconf-update.service` | Boot | Compile dconf defaults |

@@ -1,8 +1,11 @@
 # renovate: datasource=docker depName=ghcr.io/ublue-os/silverblue-main versioning=docker
 FROM ghcr.io/ublue-os/silverblue-main:44@sha256:1f05de28fc4ce8b004e524b1b5e1e0ce5f828b696c07a352bdb6d776b9242903 AS base
 
+# renovate: datasource=docker depName=ghcr.io/ublue-os/akmods versioning=docker
+FROM ghcr.io/ublue-os/akmods:ogc-44@sha256:7bd0caa0cc0b710cb4b78b4115cb8d33e60d89a9b0463c5eadbdd7b91dc357ce AS ogc-akmods
+
 FROM scratch AS context
-COPY build.sh packages.json /
+COPY build.sh install-ogc-kernel.sh packages.json /
 COPY etc /etc
 COPY usr /usr
 
@@ -11,6 +14,14 @@ FROM base
 ARG TELA_VERSION="2026-07-07"
 ARG TELA_SHA256="6b8c28f637067a15551459ab90e6720c5aba1215b777b6f1f506fea188a1ddf9"
 ARG FLATHUB_REPO_SHA256="3371dd250e61d9e1633630073fefda153cd4426f72f4afa0c3373ae2e8fea03a"
+
+RUN --mount=type=bind,from=ogc-akmods,source=/kernel-rpms,target=/tmp/kernel-rpms,ro \
+    --mount=type=bind,from=context,source=/,target=/ctx,ro \
+    --mount=type=cache,target=/var/cache \
+    --mount=type=cache,target=/var/log \
+    --mount=type=tmpfs,target=/run \
+    --mount=type=tmpfs,target=/tmp \
+    /ctx/install-ogc-kernel.sh
 
 RUN --mount=type=bind,from=context,source=/,target=/ctx \
     --mount=type=cache,target=/var/cache \
