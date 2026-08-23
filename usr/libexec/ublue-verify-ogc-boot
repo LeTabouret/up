@@ -1,0 +1,79 @@
+#!/usr/bin/bash
+
+set -euo pipefail
+
+readonly FEDORA_RELEASE="${FEDORA_RELEASE:-$(rpm -E '%fedora')}"
+readonly KERNEL_INSTALL_DIR="${KERNEL_INSTALL_DIR:-/usr/lib/kernel/install.d}"
+
+kernel_release="${1:-}"
+if [[ -z "$kernel_release" ]]; then
+    mapfile -t kernel_releases < <(
+        rpm -q --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}\n' kernel-core
+    )
+    ((${#kernel_releases[@]} == 1)) || {
+        printf 'Expected exactly one kernel-core release, found %d.\n' \
+            "${#kernel_releases[@]}" >&2
+        exit 1
+    }
+    kernel_release="${kernel_releases[0]}"
+fi
+
+[[ "$kernel_release" == *-ogc*".fc${FEDORA_RELEASE}"* ]] || {
+    printf 'Kernel is not an OGC Fedora %s release: %s\n' \
+        "$FEDORA_RELEASE" "$kernel_release" >&2
+    exit 1
+}
+
+modules_dir="/usr/lib/modules/${kernel_release}"
+initramfs="${modules_dir}/initramfs.img"
+for artifact in \
+    "${modules_dir}/vmlinuz" \
+    "${modules_dir}/modules.dep" \
+    "${modules_dir}/modules.alias" \
+    "$initramfs"; do
+    [[ -s "$artifact" ]] || {
+        printf 'Required OGC boot artifact is missing or empty: %s\n' "$artifact" >&2
+        exit 1
+    }
+done
+
+for hook in 05-rpmostree.install 50-dracut.install; do
+    hook_path="${KERNEL_INSTALL_DIR}/${hook}"
+    [[ -x "$hook_path" ]] || {
+        printf 'Real kernel-install hook is missing or not executable: %s\n' "$hook_path" >&2
+        exit 1
+    }
+    if [[ "$(sed -n '1,2p' "$hook_path")" == $'#!/bin/sh\nexit 0' ]]; then
+        printf 'Temporary no-op kernel-install hook remains: %s\n' "$hook_path" >&2
+        exit 1
+    fi
+done
+
+kernel_install_list="$(kernel-install list)"
+grep -Fq "$kernel_release" <<< "$kernel_install_list" || {
+    printf 'kernel-install does not recognize OGC release: %s\n' "$kernel_release" >&2
+    exit 1
+}
+
+dracut_modules="$(lsinitrd -m "$initramfs")"
+for module in \
+    systemd \
+    systemd-cryptsetup \
+    systemd-initrd \
+    ostree \
+    btrfs \
+    crypt \
+    dm \
+    kernel-modules \
+    kernel-modules-extra \
+    lvm \
+    mdraid \
+    rootfs-block \
+    dracut-systemd; do
+    grep -Fxq "$module" <<< "$dracut_modules" || {
+        printf 'OGC initramfs is missing required dracut module: %s\n' "$module" >&2
+        exit 1
+    }
+done
+
+printf 'Verified bootable OGC kernel artifact: %s\n' "$kernel_release"

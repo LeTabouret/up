@@ -7,6 +7,7 @@ containerfile="${repo_root}/Containerfile"
 installer="${repo_root}/install-ogc-kernel.sh"
 renovate_config="${repo_root}/renovate.json"
 workflow="${repo_root}/.github/workflows/build.yml"
+boot_verifier="${repo_root}/usr/libexec/ublue-verify-ogc-boot"
 
 grep -Eq '^FROM ghcr\.io/ublue-os/akmods:ogc-44@sha256:[a-f0-9]{64} AS ogc-akmods$' "$containerfile"
 grep -Fq '# renovate: datasource=docker depName=ghcr.io/ublue-os/akmods versioning=docker' "$containerfile"
@@ -25,16 +26,33 @@ grep -Fq 'Kernel package was not supplied by the pinned OGC artifact' "$installe
 # shellcheck disable=SC2016
 grep -Fq 'dnf5 versionlock add "${ogc_packages[@]}"' "$installer"
 grep -Fq '/usr/share/up/ogc-kernel-packages' "$installer"
+grep -Fq '/usr/bin/dracut' "$installer"
+grep -Fq 'DRACUT_NO_XATTR=1' "$installer"
+grep -Fq -- '--no-hostonly' "$installer"
+grep -Fq -- '--reproducible' "$installer"
+grep -Fq -- '--add ostree' "$installer"
+grep -Fq 'initramfs.img' "$installer"
+if grep -Fq 'find /boot -mindepth 1 -delete' "$installer"; then
+    echo 'The OGC installer must not delete boot artifacts.' >&2
+    exit 1
+fi
 grep -Fq '"matchUpdateTypes": ["digest"]' "$renovate_config"
 grep -Fq '"automergeType": "pr"' "$renovate_config"
-grep -Fq '"ghcr.io/ublue-os/akmods"' "$renovate_config"
 grep -Fq '"ghcr.io/ublue-os/silverblue-main"' "$renovate_config"
+grep -Fq '"description": "Require manual review for OGC kernel digest updates"' "$renovate_config"
+grep -Fq '"automerge": false' "$renovate_config"
 if grep -Fq '"ignoreTests": true' "$renovate_config"; then
     echo 'Renovate must not ignore CI for trusted image automerge.' >&2
     exit 1
 fi
 grep -Fq 'mapfile -t packages </usr/share/up/ogc-kernel-packages' "$workflow"
-grep -Fq 'find /boot -mindepth 1 -delete' "$installer"
+grep -Fq '/usr/libexec/ublue-verify-ogc-boot' "$workflow"
+grep -Fq '/usr/libexec/ublue-verify-ogc-boot &&' "$containerfile"
+grep -Fq 'modules.dep' "$boot_verifier"
+grep -Fq 'modules.alias' "$boot_verifier"
+grep -Fq 'kernel-install list' "$boot_verifier"
+grep -Fq 'lsinitrd -m' "$boot_verifier"
+grep -Fq 'rootfs-block' "$boot_verifier"
 grep -Fq 'bootc container lint' "$containerfile"
 
 echo 'OGC kernel integration tests passed.'

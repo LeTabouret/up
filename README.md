@@ -33,9 +33,10 @@ builds receive registry credentials, production tags, and signatures.
 This image replaces Fedora's stock kernel at composition time with the Open
 Gaming Collective (OGC) kernel from Universal Blue's prebuilt
 `ghcr.io/ublue-os/akmods:ogc-44` OCI artifact. Both the Silverblue base and OGC
-artifact are digest-pinned. Renovate proposes and, after required CI succeeds,
-automatically merges digest-only updates for these two trusted Universal Blue
-streams. Only the OGC kernel RPMs are consumed: this does not turn the image
+artifact are digest-pinned. Renovate may automatically merge digest-only base
+image updates after required CI succeeds. OGC digest updates remain manual-review
+PRs until CI includes a real VM boot test. Only the OGC kernel RPMs are consumed:
+this does not turn the image
 into Bazzite or add
 Bazzite services, branding, sessions, schedulers, or extra kernel modules.
 
@@ -52,6 +53,13 @@ packages are OGC Fedora 44 builds of one release, all required components are
 present, and no unrelated kernel-family RPM remains after installation. The
 exact installed package list is recorded in
 `/usr/share/up/ogc-kernel-packages` for CI verification.
+
+The kernel RPM transaction temporarily suppresses the rpm-ostree and dracut
+kernel-install hooks, just as Bazzite does. After restoring the real hooks, the
+build explicitly creates a reproducible, generic dracut image at
+`/usr/lib/modules/<release>/initramfs.img`, including OSTree and generic storage,
+filesystem, encryption, and root-discovery support. CI validates that artifact
+with `lsinitrd`; RPM presence and `bootc container lint` alone are insufficient.
 
 ### Secure Boot
 
@@ -150,8 +158,10 @@ the Silverblue and OGC artifact digests and immutable GitHub Action references.
 ### Renovate automerge safety
 
 Renovate PR automerge is limited to digest updates for
-`ghcr.io/ublue-os/akmods` and `ghcr.io/ublue-os/silverblue-main`. Tags remain
-`ogc-44` and `44`, so moving to Fedora 45 remains a manual, reviewed change.
+`ghcr.io/ublue-os/silverblue-main`. OGC kernel digest updates are proposed as
+PRs but require manual review until a reliable VM boot smoke test is a required
+check. Tags remain `ogc-44` and `44`, so moving to Fedora 45 remains a manual,
+reviewed change.
 Renovate does not ignore tests and cannot safely automerge unless GitHub branch
 protection for `main` requires these pull-request checks:
 

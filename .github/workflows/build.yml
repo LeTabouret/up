@@ -51,6 +51,7 @@ jobs:
             mapfile -t packages </usr/share/up/ogc-kernel-packages
             ((${#packages[@]} >= 5))
             rpm -q "${packages[@]}"
+            /usr/libexec/ublue-verify-ogc-boot
           '
 
   publish:
@@ -96,6 +97,7 @@ jobs:
             mapfile -t packages </usr/share/up/ogc-kernel-packages
             ((${#packages[@]} >= 5))
             rpm -q "${packages[@]}"
+            /usr/libexec/ublue-verify-ogc-boot
           '
       - name: Log in to GHCR
         env:

@@ -193,14 +193,22 @@ write_package_manifest() {
     printf '%s\n' "$@" | sort -u > "$OGC_PACKAGE_MANIFEST"
 }
 
-clean_boot_artifacts() {
-    # bootc owns the deployment's boot files. Kernel RPM scriptlets still leave
-    # duplicate artifacts here; current Bazzite cleanup removes them as well.
-    [[ -d /boot && ! -L /boot ]] || {
-        echo 'Refusing to clean unexpected /boot path.' >&2
-        return 1
-    }
-    find /boot -mindepth 1 -delete
+build_initramfs() {
+    local kernel_release="$1"
+    local initramfs="${MODULES_DIR}/${kernel_release}/initramfs.img"
+
+    # Match Bazzite's final image lifecycle: kernel RPM scriptlets run with the
+    # transactional hooks disabled, then a generic image-owned initramfs is
+    # generated explicitly after the real hooks have been restored.
+    DRACUT_NO_XATTR=1 /usr/bin/dracut \
+        --no-hostonly \
+        --kver "$kernel_release" \
+        --reproducible \
+        --zstd \
+        --add ostree \
+        --add fido2 \
+        --force "$initramfs"
+    chmod 0600 "$initramfs"
 }
 
 main() {
@@ -219,8 +227,9 @@ main() {
     restore_kernel_hooks
     trap - EXIT
     verify_ogc_kernel "$ogc_release" "${ogc_packages[@]}"
+    build_initramfs "$ogc_release"
+    /ctx/usr/libexec/ublue-verify-ogc-boot "$ogc_release"
     write_package_manifest "${ogc_packages[@]}"
-    clean_boot_artifacts
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

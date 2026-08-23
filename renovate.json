@@ -16,15 +16,19 @@
       "pinDigests": true
     },
     {
-      "description": "Automerge trusted Universal Blue image digest updates after CI",
+      "description": "Automerge trusted Universal Blue base image digest updates after CI",
       "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "ghcr.io/ublue-os/akmods",
-        "ghcr.io/ublue-os/silverblue-main"
-      ],
+      "matchPackageNames": ["ghcr.io/ublue-os/silverblue-main"],
       "matchUpdateTypes": ["digest"],
       "automerge": true,
       "automergeType": "pr"
+    },
+    {
+      "description": "Require manual review for OGC kernel digest updates",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/ublue-os/akmods"],
+      "matchUpdateTypes": ["digest"],
+      "automerge": false
     }
   ]
 }

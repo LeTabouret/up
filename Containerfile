@@ -65,4 +65,5 @@ RUN --mount=type=tmpfs,target=/run \
     systemd-analyze verify \
       /usr/lib/systemd/system/dconf-update.service \
       /usr/lib/systemd/user/ublue-user-flatpak-manager.service && \
+    /usr/libexec/ublue-verify-ogc-boot && \
     bootc container lint
