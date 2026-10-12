@@ -1,0 +1,14 @@
+// Removing Bazzite's wheel rules alone leaves allow_any/allow_inactive/allow_active
+// set to yes in its action XML. Require administrator authentication explicitly.
+polkit.addRule(function(action, subject) {
+    var protectedActions = [
+        "org.bazzite.policykit.privileged.user.setup",
+        "org.bazzite.policykit.waydroid.container.start",
+        "org.bazzite.policykit.waydroid.container.stop",
+        "org.bazzite.policykit.waydroid.container.restart",
+        "org.bazzite.policykit.waydroid.fix.controllers"
+    ];
+    if (protectedActions.indexOf(action.id) !== -1) {
+        return polkit.Result.AUTH_ADMIN;
+    }
+});

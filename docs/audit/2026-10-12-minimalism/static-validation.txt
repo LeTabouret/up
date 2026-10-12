@@ -1,0 +1,28 @@
+No excluded packages requested during empty.
+No excluded packages are installed during absent.
+Removing excluded packages during partial: installed partial
+Refusing to remove 51 packages during ceiling (limit: 50).
+Removing excluded packages during cascade: installed
+Refusing unapproved removal transaction during cascade.
+Packages to install: (none)
+Packages to exclude: toolbox
+Removing excluded packages during pre-install: toolbox
+No packages requested for installation.
+No excluded packages are installed during post-install verification.
+Unexpected dependency removal: libFAudio.i686. Refusing this image.
+Removal preflight, exact replay and multilib safety tests passed.
+Managed Flatpak configuration is unchanged.
+Flatpak scope, preservation and retry tests passed.
+JSON validation tests passed.
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.011s
+
+OK
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK
+Polkit helper authentication tests passed.
+Repository validation passed.

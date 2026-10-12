@@ -1,0 +1,15 @@
+.git
+.github
+docs
+tests
+README.md
+*.log
+**/__pycache__
+**/*.pyc
+
+# Private, locally supplied machine inventory; never ship in an image.
+up-inventory-*/
+
+# Isolated local image build storage and private inventory archives.
+.up-build/
+up-inventory*.tar.gz

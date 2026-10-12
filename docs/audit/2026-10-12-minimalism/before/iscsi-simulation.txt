@@ -1,0 +1,16 @@
+Package                              Arch   Version                        Repository      Size
+Removing:
+ iscsi-initiator-utils               x86_64 0:6.2.1.11-0.git4b3e853.fc44.3 fedora       1.4 MiB
+Removing dependent packages:
+ iscsi-initiator-utils-iscsiuio      x86_64 0:6.2.1.11-0.git4b3e853.fc44.3 fedora     167.2 KiB
+ libvirt                             x86_64 0:12.0.0-3.fc44                fedora       0.0   B
+ libvirt-daemon-driver-storage       x86_64 0:12.0.0-3.fc44                fedora       0.0   B
+ libvirt-daemon-driver-storage-iscsi x86_64 0:12.0.0-3.fc44                fedora      19.6 KiB
+
+Transaction Summary:
+ Removing:           5 packages
+
+After this operation, 2 MiB will be freed (install 0 B, remove 2 MiB).
+The operation will only store the transaction in /tmp/iscsi-plan
+Location "/tmp/iscsi-plan" already contains a stored transaction, it will be overwritten.
+Complete!

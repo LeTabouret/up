@@ -1,0 +1,23 @@
+{
+  "rpms":[
+    {
+      "nevra":"ModemManager-1.24.2-3.fc44.x86_64",
+      "action":"Remove",
+      "reason":"User",
+      "repo_id":"@System"
+    },
+    {
+      "nevra":"NetworkManager-bluetooth-1:1.56.1-2.fc44.x86_64",
+      "action":"Remove",
+      "reason":"Dependency",
+      "repo_id":"@System"
+    },
+    {
+      "nevra":"NetworkManager-wwan-1:1.56.1-2.fc44.x86_64",
+      "action":"Remove",
+      "reason":"Dependency",
+      "repo_id":"@System"
+    }
+  ],
+  "version":"1.0"
+}

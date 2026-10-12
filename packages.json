@@ -1,41 +1,63 @@
 {
-	"all": {
-		"include": {
-			"up": [
-				"virt-manager",
-				"libvirt",
-				"qemu-kvm",
-				"rEFInd",
-				"mesa-dri-drivers.i686",
-				"mesa-vulkan-drivers",
-				"mesa-vulkan-drivers.i686",
-				"steam",               
-				"steam-devices",      
-				"gamemode", 
-				"gamescope",
-				"mangohud",
-				"mangohud.i686",
-				"vkBasalt",
-				"vkBasalt.i686",
-				"libFAudio.i686",
-				"openxr",
-				"evtest",
-				"vulkan-tools"
-			]
-		},
-		"exclude": {
-			"up": [
-				"firefox",
-				"firefox-langpacks",
-				"gnome-classic-session",
-				"gnome-classic-session-xsession",
-				"gnome-shell-extension-launch-new-instance",
-				"gnome-shell-extension-places-menu",
-				"gnome-shell-extension-window-list",
-				"gnome-shell-extension-background-logo",
-				"gnome-shell-extension-apps-menu",
-				"toolbox"
-			]
-		}
-	}
+  "all": {
+    "include": {
+      "up": [
+        "virt-manager",
+        "libvirt",
+        "qemu-kvm",
+        "rEFInd",
+        "gnome-terminal",
+        "gnome-software",
+        "gnome-system-monitor",
+        "htop"
+      ]
+    },
+    "exclude": {
+      "up": [
+        "firefox",
+        "firefox-langpacks",
+        "gnome-classic-session",
+        "gnome-classic-session-xsession",
+        "gnome-shell-extension-launch-new-instance",
+        "gnome-shell-extension-places-menu",
+        "gnome-shell-extension-window-list",
+        "gnome-shell-extension-background-logo",
+        "gnome-shell-extension-apps-menu",
+        "toolbox",
+        "lutris",
+        "waydroid",
+        "waydroid-selinux",
+        "bazaar",
+        "webapp-manager",
+        "bazzite-portal",
+        "cardwire-gui",
+        "btop",
+        "yad",
+        "msedit",
+        "gnome-shell-extension-gsconnect",
+        "nautilus-gsconnect",
+        "btrfs-assistant",
+        "rom-properties",
+        "rom-properties-common",
+        "rom-properties-gtk4",
+        "rom-properties-localsearch3",
+        "rom-properties-utils",
+        "ptyxis",
+        "gnome-rounded-blur",
+        "steamdeck-backgrounds",
+        "steamdeck-gnome-presets",
+        "gnome-search-yafti",
+        "cockpit-bridge",
+        "cockpit-system",
+        "cockpit-selinux",
+        "cockpit-networkmanager",
+        "cockpit-storaged",
+        "cockpit-podman",
+        "cockpit-files",
+        "tailscale",
+        "firewall-config",
+        "rygel"
+      ]
+    }
+  }
 }

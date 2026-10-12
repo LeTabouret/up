@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+
+# Private, locally supplied machine inventory; never ship in an image.
+up-inventory-*/
+
+# Isolated local image build storage and private inventory archives.
+.up-build/
+up-inventory*.tar.gz
+
+# Private machine-derived audit data; public image/build evidence stays tracked.
+/docs/production-audit.md
+/docs/audit/2026-10-12/evidence.json
+/docs/audit/2026-10-12/rpm-comparison.tsv
+/docs/audit/2026-10-12/service-comparison.tsv

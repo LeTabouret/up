@@ -1,0 +1,41 @@
+no package requires gnome-browser-connector
+ibus-anthy-python-1.5.18-2.fc44.noarch
+nautilus-50.3-1.fc44.x86_64
+gnome-browser-connector 128921
+ibus-anthy 8441237
+ibus-chewing 238028
+ibus-hangul 205223
+ibus-libpinyin 2866197
+ibus-m17n 280458
+ibus-mozc 1226432
+ibus-unikey 223866
+ibus-typing-booster 9609243
+masked
+disabled
+enabled
+enabled
+/usr/share/ublue-os/announcements/sunshine-brew.msg.json
+/usr/share/ublue-os/docs/html/Installing_and_Managing_Software/Homebrew
+/usr/share/ublue-os/docs/html/assets/images/bazzite-social/Installing_and_Managing_Software/Homebrew.cs.png
+/usr/share/ublue-os/docs/html/assets/images/bazzite-social/Installing_and_Managing_Software/Homebrew.png
+/usr/share/ublue-os/docs/html/cs/Installing_and_Managing_Software/Homebrew
+/usr/share/ublue-os/docs/html/fr/Installing_and_Managing_Software/Homebrew
+/usr/share/ublue-os/docs/html/img/bbrew-installed-screenshot.png
+/usr/share/ublue-os/docs/html/img/Homebrew.png
+/usr/share/ublue-os/docs/html/img/brew-link-fail.png
+/usr/share/ublue-os/docs/html/zh_HK/Installing_and_Managing_Software/Homebrew
+/usr/share/ublue-os/homebrew
+/usr/share/ublue-os/homebrew/bazzite-cli.Brewfile
+/usr/share/ublue-os/bbrew.png
+#!/usr/bin/env bash
+
+# Prioritize system binaries to prevent brew overriding things like dbus
+# See: https://github.com/ublue-os/brew/blob/54b30cc07d3211fca65ca5cc724e9812c8c79b77/system_files/usr/lib/systemd/system/brew-upgrade.service#L17-L22
+if [[ $- == *i* && -z "${HOMEBREW_PREFIX:-}" && -d /home/linuxbrew/.linuxbrew && ! "$PATH" =~ "/home/linuxbrew.linuxbrew" ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv | grep -Ev '\bPATH=')"
+  HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}"
+  export PATH="${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin"
+fi
+no package requires makemkv
+/usr/lib64/libmmbd.so.0
+/usr/lib64/libmmbd.so.0

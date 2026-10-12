@@ -1,0 +1,147 @@
+#!/usr/bin/bash
+
+set -euo pipefail
+
+readonly FEDORA_RELEASE="${FEDORA_RELEASE:-$(rpm -E '%fedora')}"
+readonly KERNEL_INSTALL_DIR="${KERNEL_INSTALL_DIR:-/usr/lib/kernel/install.d}"
+
+[[ "$FEDORA_RELEASE" == 44 ]]
+rpm -q gnome-shell mutter gdm gnome-terminal gnome-software steam steam-devices \
+    mesa-dri-drivers.x86_64 mesa-dri-drivers.i686 \
+    mesa-vulkan-drivers.x86_64 mesa-vulkan-drivers.i686 \
+    vulkan-loader.x86_64 vulkan-loader.i686 libFAudio.i686 \
+    terra-gamescope terra-mangohud.x86_64 terra-mangohud.i686 \
+    vkBasalt.x86_64 vkBasalt.i686 openxr pipewire terra-wireplumber \
+    virt-manager libvirt qemu-kvm rEFInd gnome-system-monitor htop \
+    gnome-control-center nautilus gnome-bluetooth gnome-color-manager gcr3 \
+    gnome-online-accounts evolution-data-server gnome-disk-utility papers-previewer \
+    yelp malcontent-control orca tecla geoclue2 podman distrobox scx-scheds \
+    dmemcg-booster ryzenadj fw-fanctrl framework-system fw-ectool displaylink \
+    linux-cec input-remapper nvtop bazzite-updater cardwire uresourced-dmemcg \
+    umu-launcher umu-wrapper firewalld
+# Every declared exclusion must remain absent after all package transactions.
+while IFS= read -r excluded; do
+    if rpm -q --quiet -- "$excluded"; then
+        printf 'Unwanted package remains: %s\n' "$excluded" >&2
+        exit 1
+    fi
+done < <(jq -r '.all.exclude.up[]' /usr/share/up/packages.json)
+for unit in fw-fanctrl.service scx_loader.service displaylink.service; do
+    test "$(systemctl is-enabled "$unit")" = disabled
+done
+test "$(systemctl is-enabled input-remapper.service)" = enabled
+test "$(systemctl is-enabled cardwired.service)" = enabled
+test "$(readlink /etc/systemd/system/cockpit.service)" = /dev/null
+test ! -e /etc/skel/.config/autostart/bazzite-portal.desktop
+test ! -e /usr/share/applications/waydroid-container-restart.desktop
+# Resolve a desktop entry without opening a terminal or a graphical session.
+test "$(XDG_CURRENT_DESKTOP=GNOME xdg-terminal-exec --print-id)" = org.gnome.Terminal.desktop
+test -x /usr/bin/bazzite-steam
+test -x /usr/bin/Xwayland
+rpm -q --whatprovides /usr/bin/Xwayland
+grep -q '/usr/bin/bazzite-steam' /usr/share/applications/steam.desktop
+test -f /usr/share/wayland-sessions/gnome.desktop
+test "$(systemctl is-enabled gdm.service)" = enabled
+test "$(systemctl is-enabled uupd.timer)" = enabled
+test "$(readlink /etc/systemd/system/bazzite-flatpak-manager.service)" = /dev/null
+test "$(readlink /etc/systemd/user/bazzite-user-setup.service)" = /dev/null
+test -f /etc/selinux/config
+grep -Eq '^SELINUX=enforcing$' /etc/selinux/config
+test -s /etc/pki/akmods/certs/akmods-ublue.der
+jq -e '."image-name" == "up" and ."base-image-name" == "silverblue" and ."image-tag" == "latest"' \
+    /usr/share/ublue-os/image-info.json
+grep -Fxq system-db:local /etc/dconf/profile/user
+test -s /etc/dconf/db/local
+test -s /usr/share/icons/Tela-dark/index.theme
+test ! -e /usr/share/polkit-1/rules.d/20-privileged-ruser.rules
+test -s /usr/share/polkit-1/rules.d/00-up-admin-helpers.rules
+test ! -e /etc/skel/.config/autostart/steam.desktop
+test "$(readlink /etc/sysctl.d/60-kernel.conf)" = /dev/null
+test -s /usr/share/up/packages.txt
+test -s /usr/share/up/enabled-repositories.txt
+test -x /usr/bin/up-steam-diagnostics
+repository="$(jq -r '."image-ref" | sub("^ostree-image-signed:docker://"; "")' /usr/share/ublue-os/image-info.json)"
+jq -e --arg repository "$repository" \
+    '.transports.docker[$repository][0] |
+     .type == "sigstoreSigned" and .keyPath == "/etc/pki/containers/up.pub" and
+     .signedIdentity.type == "matchRepository"' /etc/containers/policy.json
+test -s /etc/pki/containers/up.pub
+grep -Fq 'use-sigstore-attachments: true' /etc/containers/registries.d/up.yaml
+if flatpak list --system --app --columns=application | grep -Fxq com.valvesoftware.Steam; then
+    echo 'Unexpected system Flatpak Steam in composed image.' >&2
+    exit 1
+fi
+dnf5 check
+
+kernel_release="${1:-}"
+if [[ -z "$kernel_release" ]]; then
+    mapfile -t kernel_releases < <(
+        rpm -q --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}\n' kernel-core
+    )
+    ((${#kernel_releases[@]} == 1)) || {
+        printf 'Expected exactly one kernel-core release, found %d.\n' \
+            "${#kernel_releases[@]}" >&2
+        exit 1
+    }
+    kernel_release="${kernel_releases[0]}"
+fi
+
+[[ "$kernel_release" == *-ogc*".fc${FEDORA_RELEASE}"* ]] || {
+    printf 'Kernel is not an OGC Fedora %s release: %s\n' \
+        "$FEDORA_RELEASE" "$kernel_release" >&2
+    exit 1
+}
+
+modules_dir="/usr/lib/modules/${kernel_release}"
+initramfs="${modules_dir}/initramfs.img"
+for artifact in \
+    "${modules_dir}/vmlinuz" \
+    "${modules_dir}/modules.dep" \
+    "${modules_dir}/modules.alias" \
+    "$initramfs"; do
+    [[ -s "$artifact" ]] || {
+        printf 'Required OGC boot artifact is missing or empty: %s\n' "$artifact" >&2
+        exit 1
+    }
+done
+
+for hook in 05-rpmostree.install 50-dracut.install; do
+    hook_path="${KERNEL_INSTALL_DIR}/${hook}"
+    [[ -x "$hook_path" ]] || {
+        printf 'Real kernel-install hook is missing or not executable: %s\n' "$hook_path" >&2
+        exit 1
+    }
+    if [[ "$(sed -n '1,2p' "$hook_path")" == $'#!/bin/sh\nexit 0' ]]; then
+        printf 'Temporary no-op kernel-install hook remains: %s\n' "$hook_path" >&2
+        exit 1
+    fi
+done
+
+kernel_install_list="$(kernel-install list)"
+grep -Fq "$kernel_release" <<< "$kernel_install_list" || {
+    printf 'kernel-install does not recognize OGC release: %s\n' "$kernel_release" >&2
+    exit 1
+}
+
+dracut_modules="$(lsinitrd -m "$initramfs")"
+for module in \
+    systemd \
+    systemd-cryptsetup \
+    systemd-initrd \
+    ostree \
+    btrfs \
+    crypt \
+    dm \
+    kernel-modules \
+    kernel-modules-extra \
+    lvm \
+    mdraid \
+    rootfs-block \
+    dracut-systemd; do
+    grep -Fxq "$module" <<< "$dracut_modules" || {
+        printf 'OGC initramfs is missing required dracut module: %s\n' "$module" >&2
+        exit 1
+    }
+done
+
+printf 'Verified image contents and OGC boot artifacts: %s (boot not tested)\n' "$kernel_release"

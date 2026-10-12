@@ -20,3 +20,9 @@ Copyright © 2020 The JetBrains Mono Project Authors. Files under
 Copyright © Vince Liuice and contributors. The build obtains the pinned release
 identified in `Containerfile`, verifies its SHA-256, and installs its GPL-3.0
 `COPYING` file at `/usr/share/licenses/up/Tela-icon-theme-COPYING`.
+
+## Bazzite verification key
+
+`keys/bazzite.pub` is the public Cosign verification key from Bazzite revision
+`a9450099562e12e4ea0da19efcdefe6e284ffcdb`. It is used only to verify the pinned
+upstream image; Up releases retain their separate `cosign.pub` identity.
