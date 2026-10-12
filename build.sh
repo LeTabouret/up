@@ -45,11 +45,26 @@ installed_packages() {
     done
 }
 
+verify_removal_plan() {
+    local plan="$1"
+    shift
+    local requested
+    requested="$(printf '%s\n' "$@" | jq -R . | jq -s .)"
+    jq -e --argjson requested "$requested" --argjson limit "$MAX_REMOVALS" '
+        .version == "1.0" and (.rpms | type == "array") and
+        (.rpms | length <= $limit) and
+        all(.rpms[];
+            (.nevra | capture("^(?<name>.+)-[^-]+-[^-]+\\.(?<arch>[^.]+)$") // {}) as $p |
+            .action == "Remove" and ($p.name | type == "string") and ($requested | index($p.name) != null or index($p.name + "." + $p.arch) != null))
+    ' "$plan" > /dev/null
+}
+
 remove_packages() {
     local context="$1"
     shift
     local -a requested=("$@")
     local -a installed=()
+    local plan_dir
 
     if ((${#requested[@]} == 0)); then
         echo "No excluded packages requested during ${context}."
@@ -67,21 +82,39 @@ remove_packages() {
         return 1
     fi
     printf 'Removing excluded packages during %s: %s\n' "$context" "${installed[*]}"
-    # Do not let a small exclusion list expand into a large dependency cleanup.
-    dnf5 -y remove --no-autoremove "${installed[@]}"
+    # Resolve against installed packages, validate the complete transaction, then
+    # replay exactly that plan. No ignored extras, skipped packages or autoremove.
+    plan_dir="$(mktemp -d)"
+    if ! dnf5 --disable-repo="*" -y remove --no-autoremove --store="$plan_dir" "${installed[@]}" ||
+        ! verify_removal_plan "$plan_dir/transaction.json" "${installed[@]}"; then
+        echo "Refusing unapproved removal transaction during ${context}." >&2
+        rm -rf "$plan_dir"
+        return 1
+    fi
+    if ! dnf5 --disable-repo="*" -y replay "$plan_dir"; then
+        rm -rf "$plan_dir"
+        return 1
+    fi
+    rm -rf "$plan_dir"
 }
 
 main() {
     local fedora_release
     local -a included=()
     local -a excluded=()
+    local before after removed package
 
     fedora_release="$(rpm -E '%fedora')"
+    [[ "$fedora_release" == 44 ]] || {
+        echo 'Review the Fedora migration before changing the supported release (44).' >&2
+        return 1
+    }
     load_packages include "$fedora_release" included
     load_packages exclude "$fedora_release" excluded
     printf 'Packages to install: %s\n' "${included[*]:-(none)}"
     printf 'Packages to exclude: %s\n' "${excluded[*]:-(none)}"
 
+    before="$(rpm -qa --queryformat '%{NAME}.%{ARCH}\n' | sort -u)"
     remove_packages "pre-install" "${excluded[@]}"
     if ((${#included[@]} > 0)); then
         dnf5 -y install "${included[@]}"
@@ -89,6 +122,22 @@ main() {
         echo "No packages requested for installation."
     fi
     remove_packages "post-install verification" "${excluded[@]}"
+    after="$(rpm -qa --queryformat '%{NAME}.%{ARCH}\n' | sort -u)"
+    removed="$(comm -23 <(printf '%s\n' "$before") <(printf '%s\n' "$after"))"
+    while IFS= read -r package; do
+        [[ -z "$package" ]] && continue
+        if ! printf '%s\n' "${excluded[@]}" | grep -Fxq -- "$package" && ! printf '%s\n' "${excluded[@]}" | grep -Fxq -- "${package%.*}"; then
+            printf 'Unexpected dependency removal: %s. Refusing this image.\n' "$package" >&2
+            return 1
+        fi
+    done <<< "$removed"
+    for package in "${included[@]}"; do rpm -q --quiet -- "$package"; done
+    for package in "${excluded[@]}"; do
+        if rpm -q --quiet -- "$package"; then
+            printf 'Excluded package is still installed: %s\n' "$package" >&2
+            return 1
+        fi
+    done
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

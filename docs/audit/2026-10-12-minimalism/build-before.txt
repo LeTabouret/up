@@ -1,0 +1,736 @@
+[1/3] STEP 1/1: FROM ghcr.io/ublue-os/bazzite-gnome:stable@sha256:629fed5385623270d6356a33a483b5a69010be0f5b84a11b91f27b58558a32b6 AS base
+--> d6ea7e9061de
+[2/3] STEP 1/5: FROM scratch AS context
+[2/3] STEP 2/5: COPY build.sh customize.sh packages.json /
+--> 27d4aee1d21a
+[2/3] STEP 3/5: COPY cosign.pub /up.pub
+--> 45b2ccce3f43
+[2/3] STEP 4/5: COPY etc /etc
+--> 42ac95a81b94
+[2/3] STEP 5/5: COPY usr /usr
+--> 2ea93ccebd07
+[3/3] STEP 1/11: FROM d6ea7e9061de9393cd308b01449c1282931f33b44efc44d70a85bea206bbbad4
+[3/3] STEP 2/11: ARG IMAGE_REPOSITORY="ghcr.io/letabouret/up"
+--> Using cache dba513902f530e51a4411733e7aef5264b4f20334bd4d68989926da9c4cfbae4
+--> dba513902f53
+[3/3] STEP 3/11: ARG IMAGE_VERSION="44-dev"
+--> Using cache 0b2af59f3e7c4a23000d28dbc42c363f0737765a091952e064dc4c0a9c799371
+--> 0b2af59f3e7c
+[3/3] STEP 4/11: ARG IMAGE_REVISION="local"
+--> Using cache a781e1ca4c22ffafdaceca80ab3efbd17411f109a0f9047442c2625701ffa14d
+--> a781e1ca4c22
+[3/3] STEP 5/11: ARG IMAGE_CREATED="1970-01-01T00:00:00Z"
+--> Using cache 4f9c1eb1756e663dc14608d27760d7015d3dd3bb1b6a4c1ed43e37330a4d9473
+--> 4f9c1eb1756e
+[3/3] STEP 6/11: LABEL org.opencontainers.image.title="Up"       org.opencontainers.image.description="Personal GNOME desktop on the Bazzite gaming foundation"       org.opencontainers.image.source="https://github.com/LeTabouret/up"       org.opencontainers.image.url="https://github.com/LeTabouret/up"       org.opencontainers.image.vendor="Up"       org.opencontainers.image.created="${IMAGE_CREATED}"       org.opencontainers.image.version="${IMAGE_VERSION}"       org.opencontainers.image.revision="${IMAGE_REVISION}"       org.opencontainers.image.base.name="ghcr.io/ublue-os/bazzite-gnome:stable"
+--> Using cache 728f8e9c618957c0a8e44a508d0870029ffd265f79e4aa4a5995cc3880256515
+--> 728f8e9c6189
+[3/3] STEP 7/11: ARG TELA_VERSION="2026-07-07"
+--> Using cache 53fe126158b5d15be5867686f3cb28adefc8aa04655b12f8051beb0486eb5cfa
+--> 53fe126158b5
+[3/3] STEP 8/11: ARG TELA_SHA256="6b8c28f637067a15551459ab90e6720c5aba1215b777b6f1f506fea188a1ddf9"
+--> Using cache 39b914305a7a29131e3e3ef3f6097d60126e1a01e638647ff004407c96a6e4d4
+--> 39b914305a7a
+[3/3] STEP 9/11: ARG FLATHUB_REPO_SHA256="3371dd250e61d9e1633630073fefda153cd4426f72f4afa0c3373ae2e8fea03a"
+--> Using cache b8b2c33004b348469d05cf76fbbd5c7b0d847238f3ca56c013f2daf44db1db36
+--> b8b2c33004b3
+[3/3] STEP 10/11: RUN --mount=type=bind,from=context,source=/,target=/ctx,ro     --mount=type=cache,target=/var/cache     --mount=type=cache,target=/var/log     --mount=type=tmpfs,target=/run     --mount=type=tmpfs,target=/tmp     cp -a /ctx/etc/. /etc/ &&     cp -a /ctx/usr/. /usr/ &&     cp /ctx/packages.json /tmp/packages.json &&     /ctx/build.sh &&     /ctx/customize.sh &&     curl --fail --location --silent --show-error       "https://github.com/vinceliuice/Tela-icon-theme/archive/refs/tags/${TELA_VERSION}.tar.gz"       --output /tmp/tela.tar.gz &&     echo "${TELA_SHA256}  /tmp/tela.tar.gz" | sha256sum --check --strict &&     tar --extract --gzip --file=/tmp/tela.tar.gz --directory=/tmp &&     "/tmp/Tela-icon-theme-${TELA_VERSION}/install.sh" -d /usr/share/icons &&     install -Dm0644 "/tmp/Tela-icon-theme-${TELA_VERSION}/COPYING"       /usr/share/licenses/up/Tela-icon-theme-COPYING &&     install -d /etc/flatpak/remotes.d &&     curl --fail --location --silent --show-error       https://dl.flathub.org/repo/flathub.flatpakrepo       --output /etc/flatpak/remotes.d/flathub.flatpakrepo &&     echo "${FLATHUB_REPO_SHA256}  /etc/flatpak/remotes.d/flathub.flatpakrepo" |       sha256sum --check --strict &&     systemctl enable dconf-update.service &&     systemctl --global enable ublue-user-flatpak-manager.service &&     fc-cache --force &&     for desktop in htop.desktop nvtop.desktop; do       desktop_file="/usr/share/applications/${desktop}";       if [ -f "${desktop_file}" ]; then         sed -i '/^Hidden=/d' "${desktop_file}";         printf '\nHidden=true\n' >>"${desktop_file}";       fi;     done &&     dnf5 clean all
+Packages to install: gnome-software gnome-terminal libvirt qemu-kvm rEFInd virt-manager
+Packages to exclude: firefox firefox-langpacks gnome-classic-session gnome-classic-session-xsession gnome-shell-extension-apps-menu gnome-shell-extension-background-logo gnome-shell-extension-launch-new-instance gnome-shell-extension-places-menu gnome-shell-extension-window-list toolbox
+No excluded packages are installed during pre-install.
+Updating and loading repositories:
+Repositories loaded.
+Package                                      Arch   Version                          Repository      Size
+Installing:
+ gnome-software                              x86_64 0:50.4-1.fc44                    updates     12.4 MiB
+ gnome-terminal                              x86_64 0:3.60.0-1.fc44                  fedora       8.5 MiB
+ libvirt                                     x86_64 0:12.0.0-3.fc44                  fedora       0.0   B
+ qemu-kvm                                    x86_64 2:10.2.2-1.fc44                  fedora       0.0   B
+ rEFInd                                      x86_64 0:0.14.2-5.fc44                  fedora       0.0   B
+ virt-manager                                noarch 0:5.1.0-4.fc44                   fedora       3.5 MiB
+Installing dependencies:
+ SDL2_image                                  x86_64 0:2.8.12-1.fc44                  updates    217.4 KiB
+ daxctl-libs                                 x86_64 0:85-1.fc44                      updates     86.9 KiB
+ device-mapper-multipath-libs                x86_64 0:0.13.1-1.fc44                  fedora     902.8 KiB
+ glusterfs                                   x86_64 0:11.2-8.fc44                    updates      2.5 MiB
+ glusterfs-cli                               x86_64 0:11.2-8.fc44                    updates    472.6 KiB
+ glusterfs-client-xlators                    x86_64 0:11.2-8.fc44                    updates      3.3 MiB
+ glusterfs-fuse                              x86_64 0:11.2-8.fc44                    updates    528.6 KiB
+ gnutls-utils                                x86_64 0:3.8.13-1.fc44                  updates      1.3 MiB
+ gperftools-libs                             x86_64 0:2.18.1-1.fc44                  fedora       1.3 MiB
+ gtk-vnc2                                    x86_64 0:1.5.0-4.fc44                   fedora     227.9 KiB
+ gvnc                                        x86_64 0:1.5.0-4.fc44                   fedora     242.6 KiB
+ igvm-libs                                   x86_64 0:0.4.0-10.fc44                  updates    463.4 KiB
+ iproute-tc                                  x86_64 0:6.17.0-2.fc44                  fedora     927.8 KiB
+ ipxe-roms-qemu                              noarch 0:20240119-5.gitde8a0821.fc44    fedora       2.7 MiB
+ iscsi-initiator-utils                       x86_64 0:6.2.1.11-0.git4b3e853.fc44.3   fedora       1.4 MiB
+ iscsi-initiator-utils-iscsiuio              x86_64 0:6.2.1.11-0.git4b3e853.fc44.3   fedora     167.2 KiB
+ isns-utils-libs                             x86_64 0:0.103-4.fc44                   fedora     507.3 KiB
+ kf5-filesystem                              x86_64 0:5.116.0-6.fc44                 fedora       1.4 KiB
+ libblkio                                    x86_64 0:1.5.0-5.fc44                   fedora     764.7 KiB
+ libburn                                     x86_64 0:1.5.8-1.fc44                   updates    378.4 KiB
+ libcacard                                   x86_64 3:2.8.2-1.fc44                   fedora     123.4 KiB
+ libfdt                                      x86_64 0:1.8.1-6.fc44                   updates     61.9 KiB
+ libgfapi0                                   x86_64 0:11.2-8.fc44                    updates    229.6 KiB
+ libgfrpc0                                   x86_64 0:11.2-8.fc44                    updates    224.3 KiB
+ libgfxdr0                                   x86_64 0:11.2-8.fc44                    updates     50.8 KiB
+ libglusterfs0                               x86_64 0:11.2-8.fc44                    updates    922.2 KiB
+ libiscsi                                    x86_64 0:1.20.3-4.fc44                  fedora     251.9 KiB
+ libisoburn                                  x86_64 0:1.5.8-2.fc44                   updates      1.2 MiB
+ libisofs                                    x86_64 0:1.5.8-3.fc44                   updates    548.7 KiB
+ libnbd                                      x86_64 0:1.25.7-1.fc44                  updates    495.1 KiB
+ libphodav                                   x86_64 0:3.0-13.fc44                    fedora     144.7 KiB
+ libpmem                                     x86_64 0:2.1.0-5.fc44                   fedora     421.3 KiB
+ libpmemobj                                  x86_64 0:2.1.0-5.fc44                   fedora     386.3 KiB
+ librados2                                   x86_64 2:20.2.4-1.fc44                  updates     16.2 MiB
+ librbd1                                     x86_64 2:20.2.4-1.fc44                  updates     12.9 MiB
+ librdmacm                                   x86_64 0:61.1^20260812git975bdaf-1.fc44 updates    153.9 KiB
+ libssh2                                     x86_64 0:1.11.1-9.fc44                  updates    338.6 KiB
+ libtpms                                     x86_64 0:0.10.2-3.fc44                  fedora       1.0 MiB
+ libvirt-client                              x86_64 0:12.0.0-3.fc44                  fedora     996.4 KiB
+ libvirt-client-qemu                         x86_64 0:12.0.0-3.fc44                  fedora      64.0 KiB
+ libvirt-daemon                              x86_64 0:12.0.0-3.fc44                  fedora     735.7 KiB
+ libvirt-daemon-common                       x86_64 0:12.0.0-3.fc44                  fedora     457.3 KiB
+ libvirt-daemon-config-network               x86_64 0:12.0.0-3.fc44                  fedora     470.0   B
+ libvirt-daemon-config-nwfilter              x86_64 0:12.0.0-3.fc44                  fedora      20.2 KiB
+ libvirt-daemon-driver-ch                    x86_64 0:12.0.0-3.fc44                  fedora     872.5 KiB
+ libvirt-daemon-driver-interface             x86_64 0:12.0.0-3.fc44                  fedora     758.4 KiB
+ libvirt-daemon-driver-libxl                 x86_64 0:12.0.0-3.fc44                  fedora       1.0 MiB
+ libvirt-daemon-driver-lxc                   x86_64 0:12.0.0-3.fc44                  fedora       1.1 MiB
+ libvirt-daemon-driver-network               x86_64 0:12.0.0-3.fc44                  fedora     888.2 KiB
+ libvirt-daemon-driver-nodedev               x86_64 0:12.0.0-3.fc44                  fedora     823.1 KiB
+ libvirt-daemon-driver-nwfilter              x86_64 0:12.0.0-3.fc44                  fedora     848.1 KiB
+ libvirt-daemon-driver-qemu                  x86_64 0:12.0.0-3.fc44                  fedora       2.9 MiB
+ libvirt-daemon-driver-secret                x86_64 0:12.0.0-3.fc44                  fedora     750.2 KiB
+ libvirt-daemon-driver-storage               x86_64 0:12.0.0-3.fc44                  fedora       0.0   B
+ libvirt-daemon-driver-storage-core          x86_64 0:12.0.0-3.fc44                  fedora     903.2 KiB
+ libvirt-daemon-driver-storage-disk          x86_64 0:12.0.0-3.fc44                  fedora      27.7 KiB
+ libvirt-daemon-driver-storage-gluster       x86_64 0:12.0.0-3.fc44                  fedora      35.1 KiB
+ libvirt-daemon-driver-storage-iscsi         x86_64 0:12.0.0-3.fc44                  fedora      19.6 KiB
+ libvirt-daemon-driver-storage-iscsi-direct  x86_64 0:12.0.0-3.fc44                  fedora      27.7 KiB
+ libvirt-daemon-driver-storage-logical       x86_64 0:12.0.0-3.fc44                  fedora      27.8 KiB
+ libvirt-daemon-driver-storage-mpath         x86_64 0:12.0.0-3.fc44                  fedora      15.5 KiB
+ libvirt-daemon-driver-storage-rbd           x86_64 0:12.0.0-3.fc44                  fedora      39.9 KiB
+ libvirt-daemon-driver-storage-scsi          x86_64 0:12.0.0-3.fc44                  fedora      19.6 KiB
+ libvirt-daemon-driver-vbox                  x86_64 0:12.0.0-3.fc44                  fedora     948.8 KiB
+ libvirt-daemon-lock                         x86_64 0:12.0.0-3.fc44                  fedora      99.6 KiB
+ libvirt-daemon-log                          x86_64 0:12.0.0-3.fc44                  fedora     110.3 KiB
+ libvirt-daemon-plugin-lockd                 x86_64 0:12.0.0-3.fc44                  fedora      27.5 KiB
+ libvirt-daemon-proxy                        x86_64 0:12.0.0-3.fc44                  fedora     733.5 KiB
+ libvirt-glib                                x86_64 0:5.0.0-8.fc44                   fedora     132.5 KiB
+ libvirt-libs                                x86_64 0:12.0.0-3.fc44                  fedora      30.3 MiB
+ libwsman1                                   x86_64 0:2.8.1-14.fc44                  fedora     360.0 KiB
+ libxdp                                      x86_64 0:1.6.3-1.fc44                   fedora     167.9 KiB
+ lzop                                        x86_64 0:1.04-18.fc44                   fedora      98.4 KiB
+ mdevctl                                     x86_64 0:1.4.0-3.fc44                   fedora       2.4 MiB
+ ndctl-libs                                  x86_64 0:85-1.fc44                      updates    225.6 KiB
+ numad                                       x86_64 0:0.5-50.20251104git.fc44        fedora      59.7 KiB
+ python3-libvirt                             x86_64 0:12.0.0-1.fc44                  fedora       2.2 MiB
+ qatlib                                      x86_64 0:26.08.0-1.fc44                 updates    723.2 KiB
+ qatzip-libs                                 x86_64 0:2.0.0-1.fc44                   updates    172.3 KiB
+ qemu-audio-alsa                             x86_64 2:10.2.2-1.fc44                  fedora      28.4 KiB
+ qemu-audio-dbus                             x86_64 2:10.2.2-1.fc44                  fedora     284.1 KiB
+ qemu-audio-jack                             x86_64 2:10.2.2-1.fc44                  fedora      19.8 KiB
+ qemu-audio-oss                              x86_64 2:10.2.2-1.fc44                  fedora      19.6 KiB
+ qemu-audio-pa                               x86_64 2:10.2.2-1.fc44                  fedora      27.7 KiB
+ qemu-audio-pipewire                         x86_64 2:10.2.2-1.fc44                  fedora      44.5 KiB
+ qemu-audio-sdl                              x86_64 2:10.2.2-1.fc44                  fedora      19.6 KiB
+ qemu-audio-spice                            x86_64 2:10.2.2-1.fc44                  fedora      15.5 KiB
+ qemu-block-blkio                            x86_64 2:10.2.2-1.fc44                  fedora      36.0 KiB
+ qemu-block-curl                             x86_64 2:10.2.2-1.fc44                  fedora      32.0 KiB
+ qemu-block-dmg                              x86_64 2:10.2.2-1.fc44                  fedora      11.1 KiB
+ qemu-block-gluster                          x86_64 2:10.2.2-1.fc44                  fedora      35.3 KiB
+ qemu-block-iscsi                            x86_64 2:10.2.2-1.fc44                  fedora      50.4 KiB
+ qemu-block-nfs                              x86_64 2:10.2.2-1.fc44                  fedora      28.7 KiB
+ qemu-block-rbd                              x86_64 2:10.2.2-1.fc44                  fedora      40.8 KiB
+ qemu-block-ssh                              x86_64 2:10.2.2-1.fc44                  fedora      42.4 KiB
+ qemu-char-baum                              x86_64 2:10.2.2-1.fc44                  fedora      19.4 KiB
+ qemu-char-spice                             x86_64 2:10.2.2-1.fc44                  fedora      20.3 KiB
+ qemu-common                                 x86_64 2:10.2.2-1.fc44                  fedora       2.6 MiB
+ qemu-device-display-qxl                     x86_64 2:10.2.2-1.fc44                  fedora      87.1 KiB
+ qemu-device-display-vhost-user-gpu          x86_64 2:10.2.2-1.fc44                  fedora     786.5 KiB
+ qemu-device-display-virtio-gpu              x86_64 2:10.2.2-1.fc44                  fedora      69.7 KiB
+ qemu-device-display-virtio-gpu-ccw          x86_64 2:10.2.2-1.fc44                  fedora      11.0 KiB
+ qemu-device-display-virtio-gpu-gl           x86_64 2:10.2.2-1.fc44                  fedora      46.4 KiB
+ qemu-device-display-virtio-gpu-pci          x86_64 2:10.2.2-1.fc44                  fedora      15.0 KiB
+ qemu-device-display-virtio-gpu-pci-gl       x86_64 2:10.2.2-1.fc44                  fedora      10.9 KiB
+ qemu-device-display-virtio-gpu-pci-rutabaga x86_64 2:10.2.2-1.fc44                  fedora      10.9 KiB
+ qemu-device-display-virtio-gpu-rutabaga     x86_64 2:10.2.2-1.fc44                  fedora      37.6 KiB
+ qemu-device-display-virtio-vga              x86_64 2:10.2.2-1.fc44                  fedora      19.3 KiB
+ qemu-device-display-virtio-vga-gl           x86_64 2:10.2.2-1.fc44                  fedora      11.1 KiB
+ qemu-device-display-virtio-vga-rutabaga     x86_64 2:10.2.2-1.fc44                  fedora      11.1 KiB
+ qemu-device-uefi-vars                       x86_64 2:10.2.2-1.fc44                  fedora      61.8 KiB
+ qemu-device-usb-host                        x86_64 2:10.2.2-1.fc44                  fedora      47.5 KiB
+ qemu-device-usb-redirect                    x86_64 2:10.2.2-1.fc44                  fedora      68.2 KiB
+ qemu-device-usb-smartcard                   x86_64 2:10.2.2-1.fc44                  fedora      31.6 KiB
+ qemu-img                                    x86_64 2:10.2.2-1.fc44                  fedora      24.4 MiB
+ qemu-pr-helper                              x86_64 2:10.2.2-1.fc44                  fedora       1.0 MiB
+ qemu-system-x86                             x86_64 2:10.2.2-1.fc44                  fedora       0.0   B
+ qemu-system-x86-core                        x86_64 2:10.2.2-1.fc44                  fedora      60.6 MiB
+ qemu-ui-curses                              x86_64 2:10.2.2-1.fc44                  fedora      39.5 KiB
+ qemu-ui-egl-headless                        x86_64 2:10.2.2-1.fc44                  fedora      15.4 KiB
+ qemu-ui-gtk                                 x86_64 2:10.2.2-1.fc44                  fedora      86.3 KiB
+ qemu-ui-opengl                              x86_64 2:10.2.2-1.fc44                  fedora      36.1 KiB
+ qemu-ui-sdl                                 x86_64 2:10.2.2-1.fc44                  fedora      44.6 KiB
+ qemu-ui-spice-app                           x86_64 2:10.2.2-1.fc44                  fedora      15.3 KiB
+ qemu-ui-spice-core                          x86_64 2:10.2.2-1.fc44                  fedora      67.8 KiB
+ rEFInd-tools                                noarch 0:0.14.2-5.fc44                  fedora       4.3 MiB
+ rEFInd-unsigned-x64                         noarch 0:0.14.2-5.fc44                  fedora     764.0 KiB
+ rutabaga-gfx-ffi                            x86_64 0:0.1.3-5.fc44                   fedora     618.4 KiB
+ scrub                                       x86_64 0:2.6.1-12.fc44                  fedora     126.2 KiB
+ seabios-bin                                 noarch 0:1.17.0-10.fc44                 fedora     960.8 KiB
+ seavgabios-bin                              noarch 0:1.17.0-10.fc44                 fedora     366.8 KiB
+ spice-glib                                  x86_64 0:0.42-8.fc44                    fedora       1.2 MiB
+ spice-gtk3                                  x86_64 0:0.42-8.fc44                    fedora     285.8 KiB
+ spice-server                                x86_64 0:0.16.0-2.fc43                  fedora       1.2 MiB
+ swtpm                                       x86_64 0:0.10.2-1.fc44                  updates     53.1 KiB
+ swtpm-libs                                  x86_64 0:0.10.2-1.fc44                  updates    132.2 KiB
+ swtpm-selinux                               noarch 0:0.10.2-1.fc44                  updates    253.1 KiB
+ swtpm-tools                                 x86_64 0:0.10.2-1.fc44                  updates    257.5 KiB
+ thrift                                      x86_64 0:0.20.0-9.fc44                  fedora       5.6 MiB
+ usbredir                                    x86_64 0:0.15.0-3.fc44                  fedora     109.9 KiB
+ virglrenderer                               x86_64 0:1.3.0-1.fc44                   fedora       1.3 MiB
+ virt-manager-common                         noarch 0:5.1.0-4.fc44                   fedora       6.4 MiB
+ virtiofsd                                   x86_64 0:1.14.0-1.fc44                  updates      2.4 MiB
+ xen-libs                                    x86_64 0:4.21.2-2.fc44                  updates      1.8 MiB
+ xen-licenses                                x86_64 0:4.21.2-2.fc44                  updates    290.2 KiB
+ xorriso                                     x86_64 0:1.5.8-2.fc44                   updates    365.0 KiB
+
+Transaction Summary:
+ Installing:       152 packages
+
+Total size of inbound packages is 58 MiB. Need to download 58 MiB.
+After this operation, 250 MiB extra will be used (install 250 MiB, remove 0 B).
+[  1/152] libvirt-0:12.0.0-3.fc44.x86_6 100% |  66.3 KiB/s |  11.6 KiB |  00m00s
+[  2/152] qemu-kvm-2:10.2.2-1.fc44.x86_ 100% |  70.0 KiB/s |  15.3 KiB |  00m00s
+[  3/152] rEFInd-0:0.14.2-5.fc44.x86_64 100% | 125.5 KiB/s |   8.2 KiB |  00m00s
+[  4/152] libvirt-client-0:12.0.0-3.fc4 100% |   1.3 MiB/s | 435.5 KiB |  00m00s
+[  5/152] gnome-terminal-0:3.60.0-1.fc4 100% |   2.6 MiB/s |   1.5 MiB |  00m01s
+[  6/152] virt-manager-0:5.1.0-4.fc44.n 100% |   1.9 MiB/s | 714.8 KiB |  00m00s
+[  7/152] libvirt-client-qemu-0:12.0.0- 100% | 542.7 KiB/s |  32.0 KiB |  00m00s
+[  8/152] libvirt-daemon-config-network 100% | 239.5 KiB/s |  13.9 KiB |  00m00s
+[  9/152] libvirt-daemon-0:12.0.0-3.fc4 100% |   2.2 MiB/s | 195.5 KiB |  00m00s
+[ 10/152] libvirt-daemon-config-nwfilte 100% | 421.9 KiB/s |  24.0 KiB |  00m00s
+[ 11/152] libvirt-daemon-driver-ch-0:12 100% |   3.0 MiB/s | 239.3 KiB |  00m00s
+[ 12/152] libvirt-daemon-driver-interfa 100% |   2.0 MiB/s | 200.0 KiB |  00m00s
+[ 13/152] libvirt-daemon-driver-libxl-0 100% |   3.4 MiB/s | 303.7 KiB |  00m00s
+[ 14/152] libvirt-daemon-driver-lxc-0:1 100% |   3.6 MiB/s | 315.4 KiB |  00m00s
+[ 15/152] libvirt-daemon-driver-nodedev 100% |   2.7 MiB/s | 224.0 KiB |  00m00s
+[ 16/152] libvirt-daemon-driver-network 100% |   2.4 MiB/s | 250.6 KiB |  00m00s
+[ 17/152] libvirt-daemon-driver-nwfilte 100% |   2.9 MiB/s | 236.2 KiB |  00m00s
+[ 18/152] libvirt-daemon-driver-storage 100% | 107.4 KiB/s |  11.3 KiB |  00m00s
+[ 19/152] libvirt-daemon-driver-secret- 100% |   1.4 MiB/s | 197.5 KiB |  00m00s
+[ 20/152] libvirt-daemon-driver-qemu-0: 100% |   6.0 MiB/s |   1.0 MiB |  00m00s
+[ 21/152] qemu-system-x86-2:10.2.2-1.fc 100% | 289.8 KiB/s |  17.1 KiB |  00m00s
+[ 22/152] libvirt-daemon-driver-vbox-0: 100% |   2.5 MiB/s | 272.9 KiB |  00m00s
+[ 23/152] rEFInd-unsigned-x64-0:0.14.2- 100% |   1.4 MiB/s | 208.0 KiB |  00m00s
+[ 24/152] rEFInd-tools-0:0.14.2-5.fc44. 100% |   6.6 MiB/s |   3.4 MiB |  00m01s
+[ 25/152] virt-manager-common-0:5.1.0-4 100% |   2.4 MiB/s |   1.3 MiB |  00m01s
+[ 26/152] python3-libvirt-0:12.0.0-1.fc 100% |   3.1 MiB/s | 379.6 KiB |  00m00s
+[ 27/152] libvirt-daemon-common-0:12.0. 100% |   1.2 MiB/s | 137.8 KiB |  00m00s
+[ 28/152] libvirt-daemon-lock-0:12.0.0- 100% | 471.7 KiB/s |  48.6 KiB |  00m00s
+[ 29/152] libvirt-daemon-log-0:12.0.0-3 100% | 401.4 KiB/s |  52.6 KiB |  00m00s
+[ 30/152] libvirt-daemon-plugin-lockd-0 100% | 172.3 KiB/s |  22.6 KiB |  00m00s
+[ 31/152] libvirt-daemon-proxy-0:12.0.0 100% | 850.0 KiB/s | 192.9 KiB |  00m00s
+[ 32/152] libvirt-libs-0:12.0.0-3.fc44. 100% |   6.1 MiB/s |   5.5 MiB |  00m01s
+[ 33/152] lzop-0:1.04-18.fc44.x86_64    100% | 893.8 KiB/s |  56.3 KiB |  00m00s
+[ 34/152] mdevctl-0:1.4.0-3.fc44.x86_64 100% |   2.1 MiB/s | 956.4 KiB |  00m00s
+[ 35/152] qemu-img-2:10.2.2-1.fc44.x86_ 100% |   7.2 MiB/s |   2.7 MiB |  00m00s
+[ 36/152] libvirt-daemon-driver-storage 100% | 381.6 KiB/s |  22.5 KiB |  00m00s
+[ 37/152] numad-0:0.5-50.20251104git.fc 100% |  55.0 KiB/s |  39.3 KiB |  00m01s
+[ 38/152] libvirt-daemon-driver-storage 100% |   2.1 MiB/s | 251.2 KiB |  00m00s
+[ 39/152] libvirt-daemon-driver-storage 100% | 408.3 KiB/s |  24.5 KiB |  00m00s
+[ 40/152] libvirt-daemon-driver-storage 100% | 331.8 KiB/s |  19.6 KiB |  00m00s
+[ 41/152] libvirt-daemon-driver-storage 100% | 355.6 KiB/s |  21.7 KiB |  00m00s
+[ 42/152] libvirt-daemon-driver-storage 100% | 408.3 KiB/s |  23.7 KiB |  00m00s
+[ 43/152] libvirt-daemon-driver-storage 100% | 293.8 KiB/s |  17.0 KiB |  00m00s
+[ 44/152] libvirt-daemon-driver-storage 100% | 446.9 KiB/s |  27.7 KiB |  00m00s
+[ 45/152] libvirt-daemon-driver-storage 100% | 320.9 KiB/s |  19.3 KiB |  00m00s
+[ 46/152] qemu-audio-alsa-2:10.2.2-1.fc 100% | 431.7 KiB/s |  25.5 KiB |  00m00s
+[ 47/152] qemu-audio-dbus-2:10.2.2-1.fc 100% |   1.2 MiB/s |  77.1 KiB |  00m00s
+[ 48/152] qemu-audio-jack-2:10.2.2-1.fc 100% | 374.6 KiB/s |  24.0 KiB |  00m00s
+[ 49/152] qemu-audio-oss-2:10.2.2-1.fc4 100% | 376.4 KiB/s |  24.1 KiB |  00m00s
+[ 50/152] qemu-audio-pa-2:10.2.2-1.fc44 100% | 443.3 KiB/s |  25.7 KiB |  00m00s
+[ 51/152] qemu-audio-pipewire-2:10.2.2- 100% | 511.8 KiB/s |  32.2 KiB |  00m00s
+[ 52/152] qemu-audio-sdl-2:10.2.2-1.fc4 100% | 356.7 KiB/s |  22.5 KiB |  00m00s
+[ 53/152] qemu-audio-spice-2:10.2.2-1.f 100% | 379.0 KiB/s |  21.6 KiB |  00m00s
+[ 54/152] qemu-block-blkio-2:10.2.2-1.f 100% | 450.4 KiB/s |  27.9 KiB |  00m00s
+[ 55/152] qemu-block-curl-2:10.2.2-1.fc 100% | 435.6 KiB/s |  27.0 KiB |  00m00s
+[ 56/152] qemu-block-dmg-2:10.2.2-1.fc4 100% | 336.4 KiB/s |  19.5 KiB |  00m00s
+[ 57/152] qemu-block-gluster-2:10.2.2-1 100% | 464.3 KiB/s |  28.8 KiB |  00m00s
+[ 58/152] qemu-block-iscsi-2:10.2.2-1.f 100% | 581.7 KiB/s |  36.1 KiB |  00m00s
+[ 59/152] qemu-block-nfs-2:10.2.2-1.fc4 100% | 451.5 KiB/s |  27.1 KiB |  00m00s
+[ 60/152] qemu-block-rbd-2:10.2.2-1.fc4 100% | 508.9 KiB/s |  32.1 KiB |  00m00s
+[ 61/152] qemu-block-ssh-2:10.2.2-1.fc4 100% | 480.9 KiB/s |  30.3 KiB |  00m00s
+[ 62/152] qemu-char-baum-2:10.2.2-1.fc4 100% | 413.0 KiB/s |  24.4 KiB |  00m00s
+[ 63/152] qemu-char-spice-2:10.2.2-1.fc 100% | 378.0 KiB/s |  23.1 KiB |  00m00s
+[ 64/152] qemu-device-display-qxl-2:10. 100% | 747.5 KiB/s |  45.6 KiB |  00m00s
+[ 65/152] qemu-device-display-vhost-use 100% |   3.1 MiB/s | 270.3 KiB |  00m00s
+[ 66/152] qemu-device-display-virtio-gp 100% | 312.7 KiB/s |  19.7 KiB |  00m00s
+[ 67/152] qemu-device-display-virtio-gp 100% | 553.6 KiB/s |  42.1 KiB |  00m00s
+[ 68/152] qemu-device-display-virtio-gp 100% | 534.4 KiB/s |  31.5 KiB |  00m00s
+[ 69/152] qemu-device-display-virtio-gp 100% | 339.5 KiB/s |  20.4 KiB |  00m00s
+[ 70/152] qemu-device-display-virtio-gp 100% | 322.5 KiB/s |  19.3 KiB |  00m00s
+[ 71/152] qemu-device-display-virtio-gp 100% | 339.8 KiB/s |  19.4 KiB |  00m00s
+[ 72/152] qemu-device-display-virtio-gp 100% | 469.7 KiB/s |  29.1 KiB |  00m00s
+[ 73/152] qemu-device-display-virtio-vg 100% | 355.3 KiB/s |  22.0 KiB |  00m00s
+[ 74/152] qemu-device-display-virtio-vg 100% | 338.7 KiB/s |  19.6 KiB |  00m00s
+[ 75/152] qemu-device-display-virtio-vg 100% | 333.8 KiB/s |  19.7 KiB |  00m00s
+[ 76/152] qemu-device-uefi-vars-2:10.2. 100% | 639.0 KiB/s |  38.3 KiB |  00m00s
+[ 77/152] qemu-device-usb-host-2:10.2.2 100% | 572.7 KiB/s |  33.8 KiB |  00m00s
+[ 78/152] qemu-device-usb-smartcard-2:1 100% | 474.7 KiB/s |  28.0 KiB |  00m00s
+[ 79/152] qemu-device-usb-redirect-2:10 100% | 560.2 KiB/s |  40.3 KiB |  00m00s
+[ 80/152] qemu-ui-curses-2:10.2.2-1.fc4 100% | 449.0 KiB/s |  27.4 KiB |  00m00s
+[ 81/152] qemu-pr-helper-2:10.2.2-1.fc4 100% |   3.6 MiB/s | 367.5 KiB |  00m00s
+[ 82/152] qemu-ui-egl-headless-2:10.2.2 100% | 367.9 KiB/s |  21.3 KiB |  00m00s
+[ 83/152] qemu-ui-gtk-2:10.2.2-1.fc44.x 100% | 735.9 KiB/s |  44.9 KiB |  00m00s
+[ 84/152] qemu-ui-opengl-2:10.2.2-1.fc4 100% | 509.1 KiB/s |  29.5 KiB |  00m00s
+[ 85/152] qemu-ui-sdl-2:10.2.2-1.fc44.x 100% | 535.9 KiB/s |  32.2 KiB |  00m00s
+[ 86/152] qemu-ui-spice-app-2:10.2.2-1. 100% | 374.0 KiB/s |  21.7 KiB |  00m00s
+[ 87/152] qemu-ui-spice-core-2:10.2.2-1 100% | 668.6 KiB/s |  40.1 KiB |  00m00s
+[ 88/152] libwsman1-0:2.8.1-14.fc44.x86 100% |   1.8 MiB/s | 143.3 KiB |  00m00s
+[ 89/152] iproute-tc-0:6.17.0-2.fc44.x8 100% |   3.9 MiB/s | 468.0 KiB |  00m00s
+[ 90/152] scrub-0:2.6.1-12.fc44.x86_64  100% | 479.8 KiB/s |  43.7 KiB |  00m00s
+[ 91/152] libiscsi-0:1.20.3-4.fc44.x86_ 100% |   1.3 MiB/s | 100.5 KiB |  00m00s
+[ 92/152] spice-server-0:0.16.0-2.fc43. 100% |   2.7 MiB/s | 401.2 KiB |  00m00s
+[ 93/152] qemu-common-2:10.2.2-1.fc44.x 100% |   3.0 MiB/s | 578.4 KiB |  00m00s
+[ 94/152] virglrenderer-0:1.3.0-1.fc44. 100% |   3.0 MiB/s | 444.2 KiB |  00m00s
+[ 95/152] libblkio-0:1.5.0-5.fc44.x86_6 100% |   1.7 MiB/s | 340.6 KiB |  00m00s
+[ 96/152] rutabaga-gfx-ffi-0:0.1.3-5.fc 100% |   2.1 MiB/s | 270.8 KiB |  00m00s
+[ 97/152] usbredir-0:0.15.0-3.fc44.x86_ 100% | 457.2 KiB/s |  51.2 KiB |  00m00s
+[ 98/152] libcacard-3:2.8.2-1.fc44.x86_ 100% | 651.1 KiB/s |  56.6 KiB |  00m00s
+[ 99/152] libpmem-0:2.1.0-5.fc44.x86_64 100% |   1.1 MiB/s | 108.7 KiB |  00m00s
+[100/152] device-mapper-multipath-libs- 100% |   1.9 MiB/s | 301.6 KiB |  00m00s
+[101/152] libxdp-0:1.6.3-1.fc44.x86_64  100% | 985.0 KiB/s |  71.9 KiB |  00m00s
+[102/152] seabios-bin-0:1.17.0-10.fc44. 100% |   1.6 MiB/s | 189.6 KiB |  00m00s
+[103/152] seavgabios-bin-0:1.17.0-10.fc 100% | 759.5 KiB/s |  51.6 KiB |  00m00s
+[104/152] qemu-system-x86-core-2:10.2.2 100% |   6.6 MiB/s |   8.9 MiB |  00m01s
+[105/152] ipxe-roms-qemu-0:20240119-5.g 100% |   4.2 MiB/s |   1.7 MiB |  00m00s
+[106/152] kf5-filesystem-0:5.116.0-6.fc 100% | 175.6 KiB/s |  10.0 KiB |  00m00s
+[107/152] gtk-vnc2-0:1.5.0-4.fc44.x86_6 100% | 677.2 KiB/s |  42.7 KiB |  00m00s
+[108/152] gvnc-0:1.5.0-4.fc44.x86_64    100% |   1.4 MiB/s | 108.1 KiB |  00m00s
+[109/152] xorriso-0:1.5.8-2.fc44.x86_64 100% | 761.7 KiB/s | 349.6 KiB |  00m00s
+[110/152] libvirt-glib-0:5.0.0-8.fc44.x 100% | 818.3 KiB/s |  53.2 KiB |  00m00s
+[111/152] spice-gtk3-0:0.42-8.fc44.x86_ 100% | 827.6 KiB/s |  67.0 KiB |  00m00s
+[112/152] libphodav-0:3.0-13.fc44.x86_6 100% | 619.5 KiB/s |  65.1 KiB |  00m00s
+[113/152] gnome-software-0:50.4-1.fc44. 100% |   3.2 MiB/s |   2.6 MiB |  00m01s
+[114/152] spice-glib-0:0.42-8.fc44.x86_ 100% |   2.3 MiB/s | 372.1 KiB |  00m00s
+[115/152] SDL2_image-0:2.8.12-1.fc44.x8 100% |   1.0 MiB/s | 110.9 KiB |  00m00s
+[116/152] daxctl-libs-0:85-1.fc44.x86_6 100% | 530.5 KiB/s |  42.4 KiB |  00m00s
+[117/152] libfdt-0:1.8.1-6.fc44.x86_64  100% | 501.4 KiB/s |  36.6 KiB |  00m00s
+[118/152] librdmacm-0:61.1^20260812git9 100% | 945.4 KiB/s |  78.5 KiB |  00m00s
+[119/152] qatzip-libs-0:2.0.0-1.fc44.x8 100% | 601.2 KiB/s |  77.0 KiB |  00m00s
+[120/152] xen-libs-0:4.21.2-2.fc44.x86_ 100% |   2.4 MiB/s | 673.3 KiB |  00m00s
+[121/152] virtiofsd-0:1.14.0-1.fc44.x86 100% |   2.5 MiB/s | 961.7 KiB |  00m00s
+[122/152] igvm-libs-0:0.4.0-10.fc44.x86 100% | 273.4 KiB/s | 229.7 KiB |  00m01s
+[123/152] thrift-0:0.20.0-9.fc44.x86_64 100% |   3.1 MiB/s |   1.9 MiB |  00m01s
+[124/152] librados2-2:20.2.4-1.fc44.x86 100% |   5.4 MiB/s |   4.3 MiB |  00m01s
+[125/152] libpmemobj-0:2.1.0-5.fc44.x86 100% |   1.8 MiB/s | 163.9 KiB |  00m00s
+[126/152] libgfapi0-0:11.2-8.fc44.x86_6 100% | 854.8 KiB/s |  96.6 KiB |  00m00s
+[127/152] gperftools-libs-0:2.18.1-1.fc 100% |   2.6 MiB/s | 316.6 KiB |  00m00s
+[128/152] libssh2-0:1.11.1-9.fc44.x86_6 100% |   1.0 MiB/s | 149.1 KiB |  00m00s
+[129/152] iscsi-initiator-utils-0:6.2.1 100% |   2.9 MiB/s | 401.3 KiB |  00m00s
+[130/152] iscsi-initiator-utils-iscsiui 100% |   1.1 MiB/s |  82.9 KiB |  00m00s
+[131/152] isns-utils-libs-0:0.103-4.fc4 100% |   1.4 MiB/s | 111.7 KiB |  00m00s
+[132/152] glusterfs-cli-0:11.2-8.fc44.x 100% |   1.2 MiB/s | 189.2 KiB |  00m00s
+[133/152] librbd1-2:20.2.4-1.fc44.x86_6 100% |   3.5 MiB/s |   3.3 MiB |  00m01s
+[134/152] libnbd-0:1.25.7-1.fc44.x86_64 100% |   1.5 MiB/s | 191.3 KiB |  00m00s
+[135/152] swtpm-tools-0:0.10.2-1.fc44.x 100% |   1.4 MiB/s | 115.8 KiB |  00m00s
+[136/152] ndctl-libs-0:85-1.fc44.x86_64 100% | 943.9 KiB/s |  90.6 KiB |  00m00s
+[137/152] glusterfs-fuse-0:11.2-8.fc44. 100% | 379.8 KiB/s | 139.0 KiB |  00m00s
+[138/152] xen-licenses-0:4.21.2-2.fc44. 100% | 588.1 KiB/s |  44.1 KiB |  00m00s
+[139/152] libisoburn-0:1.5.8-2.fc44.x86 100% |   2.6 MiB/s | 468.8 KiB |  00m00s
+[140/152] swtpm-0:0.10.2-1.fc44.x86_64  100% | 409.3 KiB/s |  33.6 KiB |  00m00s
+[141/152] swtpm-libs-0:0.10.2-1.fc44.x8 100% | 860.4 KiB/s |  64.5 KiB |  00m00s
+[142/152] libtpms-0:0.10.2-3.fc44.x86_6 100% |   2.9 MiB/s | 431.6 KiB |  00m00s
+[143/152] qatlib-0:26.08.0-1.fc44.x86_6 100% |   2.4 MiB/s | 272.1 KiB |  00m00s
+[144/152] libburn-0:1.5.8-1.fc44.x86_64 100% |   1.4 MiB/s | 178.0 KiB |  00m00s
+[145/152] libisofs-0:1.5.8-3.fc44.x86_6 100% |   2.3 MiB/s | 252.8 KiB |  00m00s
+[146/152] libgfrpc0-0:11.2-8.fc44.x86_6 100% | 543.4 KiB/s |  50.5 KiB |  00m00s
+[147/152] gnutls-utils-0:3.8.13-1.fc44. 100% | 764.9 KiB/s | 312.1 KiB |  00m00s
+[148/152] libgfxdr0-0:11.2-8.fc44.x86_6 100% | 292.8 KiB/s |  22.8 KiB |  00m00s
+[149/152] libglusterfs0-0:11.2-8.fc44.x 100% |   2.4 MiB/s | 294.8 KiB |  00m00s
+[150/152] glusterfs-0:11.2-8.fc44.x86_6 100% |   4.0 MiB/s | 598.0 KiB |  00m00s
+[151/152] swtpm-selinux-0:0.10.2-1.fc44 100% | 213.6 KiB/s |  22.6 KiB |  00m00s
+[152/152] glusterfs-client-xlators-0:11 100% |   1.1 MiB/s | 794.6 KiB |  00m01s
+--------------------------------------------------------------------------------
+[152/152] Total                         100% |   6.1 MiB/s |  58.4 MiB |  00m10s
+Running transaction
+[  1/154] Verify package files          100% | 873.0   B/s | 152.0   B |  00m00s
+[  2/154] Prepare transaction           100% | 298.0   B/s | 152.0   B |  00m01s
+[  3/154] Installing gperftools-libs-0: 100% |  53.1 MiB/s |   1.3 MiB |  00m00s
+[  4/154] Installing libglusterfs0-0:11 100% | 150.2 MiB/s | 923.1 KiB |  00m00s
+[  5/154] Installing libgfxdr0-0:11.2-8 100% |  16.8 MiB/s |  51.7 KiB |  00m00s
+[  6/154] Installing libgfrpc0-0:11.2-8 100% |  73.3 MiB/s | 225.1 KiB |  00m00s
+[  7/154] Installing daxctl-libs-0:85-1 100% |  28.8 MiB/s |  88.6 KiB |  00m00s
+[  8/154] Installing spice-server-0:0.1 100% | 147.0 MiB/s |   1.2 MiB |  00m00s
+[  9/154] Installing librdmacm-0:61.1^2 100% |  25.4 MiB/s | 155.9 KiB |  00m00s
+[ 10/154] Installing libiscsi-0:1.20.3- 100% | 816.3 KiB/s | 253.9 KiB |  00m00s
+[ 11/154] Installing ndctl-libs-0:85-1. 100% |  44.4 MiB/s | 227.3 KiB |  00m00s
+[ 12/154] Installing libpmem-0:2.1.0-5. 100% |  82.7 MiB/s | 423.3 KiB |  00m00s
+[ 13/154] Installing glusterfs-client-x 100% | 238.2 MiB/s |   3.3 MiB |  00m00s
+[ 14/154] Installing libgfapi0-0:11.2-8 100% |  45.1 MiB/s | 231.0 KiB |  00m00s
+[ 15/154] Installing libtpms-0:0.10.2-3 100% | 174.1 MiB/s |   1.0 MiB |  00m00s
+[ 16/154] Installing libnbd-0:1.25.7-1. 100% |  22.1 MiB/s | 498.2 KiB |  00m00s
+[ 17/154] Installing libphodav-0:3.0-13 100% |   7.3 MiB/s | 149.6 KiB |  00m00s
+[ 18/154] Installing libcacard-3:2.8.2- 100% |  30.5 MiB/s | 124.8 KiB |  00m00s
+[ 19/154] Installing usbredir-0:0.15.0- 100% |  27.2 MiB/s | 111.6 KiB |  00m00s
+[ 20/154] Installing virglrenderer-0:1. 100% | 180.7 MiB/s |   1.3 MiB |  00m00s
+[ 21/154] Installing qemu-img-2:10.2.2- 100% | 382.0 MiB/s |  24.4 MiB |  00m00s
+[ 22/154] Installing numad-0:0.5-50.202 100% |   1.5 MiB/s |  61.0 KiB |  00m00s
+[ 23/154] Installing rEFInd-tools-0:0.1 100% |  94.9 MiB/s |   4.4 MiB |  00m00s
+[ 24/154] Installing rEFInd-unsigned-x6 100% | 249.2 MiB/s | 765.7 KiB |  00m00s
+[ 25/154] Installing spice-glib-0:0.42- 100% |  92.0 MiB/s |   1.2 MiB |  00m00s
+[ 26/154] Installing spice-gtk3-0:0.42- 100% |  70.0 MiB/s | 286.8 KiB |  00m00s
+[ 27/154] Installing swtpm-libs-0:0.10. 100% |  32.7 MiB/s | 133.8 KiB |  00m00s
+[ 28/154] Installing swtpm-0:0.10.2-1.f 100% |   1.9 MiB/s |  54.4 KiB |  00m00s
+[ 29/154] Installing swtpm-selinux-0:0. 100% |  21.9 KiB/s | 253.7 KiB |  00m12s
+>>> Running %post scriptlet: swtpm-selinux-0:0.10.2-1.fc44.noarch
+>>> Finished %post scriptlet: swtpm-selinux-0:0.10.2-1.fc44.noarch
+>>> Scriptlet output:
+>>> libsemanage.semanage_rename: WARNING: rename(/etc/selinux/targeted/active, /etc/selinux/targeted/previous) failed: Invalid cross-device link, fall back to non-atomic semanage_copy_dir_flags()
+>>> 
+[ 30/154] Installing libpmemobj-0:2.1.0 100% |  47.4 MiB/s | 388.1 KiB |  00m00s
+[ 31/154] Installing glusterfs-cli-0:11 100% |   5.6 MiB/s | 473.6 KiB |  00m00s
+>>> Running sysusers scriptlet: glusterfs-0:11.2-8.fc44.x86_64
+>>> Finished sysusers scriptlet: glusterfs-0:11.2-8.fc44.x86_64
+>>> Scriptlet output:
+>>> Failed to connect to audit log, ignoring: Invalid argument
+>>> /usr/lib/sysusers.d/plugdev.conf:1: Conflict with earlier configuration for group 'plugdev' in /usr/lib/sysusers.d/openrazer.conf:3, ignoring line.
+>>> Creating group 'gluster' with GID 956.
+>>> Creating user 'gluster' (GlusterFS daemons) with UID 956 and GID 956.
+>>> 
+[ 32/154] Installing glusterfs-0:11.2-8 100% |  51.0 MiB/s |   2.5 MiB |  00m00s
+[ 33/154] Installing glusterfs-fuse-0:1 100% |  27.3 MiB/s | 530.6 KiB |  00m00s
+[ 34/154] Installing libisofs-0:1.5.8-3 100% |  76.8 MiB/s | 550.3 KiB |  00m00s
+[ 35/154] Installing libburn-0:1.5.8-1. 100% |  61.9 MiB/s | 380.0 KiB |  00m00s
+[ 36/154] Installing libisoburn-0:1.5.8 100% |  17.5 MiB/s |   1.2 MiB |  00m00s
+>>> Running sysusers scriptlet: qatlib-0:26.08.0-1.fc44.x86_64
+>>> Finished sysusers scriptlet: qatlib-0:26.08.0-1.fc44.x86_64
+>>> Scriptlet output:
+>>> Failed to connect to audit log, ignoring: Invalid argument
+>>> /usr/lib/sysusers.d/plugdev.conf:1: Conflict with earlier configuration for group 'plugdev' in /usr/lib/sysusers.d/openrazer.conf:3, ignoring line.
+>>> Creating group 'qat' with GID 955.
+>>> 
+[ 37/154] Installing qatlib-0:26.08.0-1 100% |  78.7 MiB/s | 725.5 KiB |  00m00s
+[ 38/154] Installing qatzip-libs-0:2.0. 100% |  42.5 MiB/s | 174.1 KiB |  00m00s
+[ 39/154] Installing gnutls-utils-0:3.8 100% |  45.2 MiB/s |   1.3 MiB |  00m00s
+[ 40/154] Installing swtpm-tools-0:0.10 100% |  10.3 MiB/s | 262.5 KiB |  00m00s
+[ 41/154] Installing xen-licenses-0:4.2 100% |  24.5 MiB/s | 300.8 KiB |  00m00s
+[ 42/154] Installing xen-libs-0:4.21.2- 100% |  56.2 MiB/s |   1.9 MiB |  00m00s
+[ 43/154] Installing isns-utils-libs-0: 100% | 124.1 MiB/s | 508.3 KiB |  00m00s
+[ 44/154] Installing iscsi-initiator-ut 100% |  23.6 MiB/s |   1.4 MiB |  00m00s
+>>> Running %post scriptlet: iscsi-initiator-utils-0:6.2.1.11-0.git4b3e853.fc44.3.x86_64
+>>> Finished %post scriptlet: iscsi-initiator-utils-0:6.2.1.11-0.git4b3e853.fc44.3.x86_64
+>>> Scriptlet output:
+>>> Unit /etc/systemd/system/iscsi.service is masked, ignoring.
+>>> Created symlink '/etc/systemd/system/sysinit.target.wants/iscsi-starter.service' → '/usr/lib/systemd/system/iscsi-starter.service'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/iscsid.socket' → '/usr/lib/systemd/system/iscsid.socket'.
+>>> Created symlink '/etc/systemd/system/sysinit.target.wants/iscsi-onboot.service' → '/usr/lib/systemd/system/iscsi-onboot.service'.
+>>> 
+[ 45/154] Installing iscsi-initiator-ut 100% |   3.9 MiB/s | 168.5 KiB |  00m00s
+>>> Running %post scriptlet: iscsi-initiator-utils-iscsiuio-0:6.2.1.11-0.git4b3e853.fc44.3.x86_64
+>>> Finished %post scriptlet: iscsi-initiator-utils-iscsiuio-0:6.2.1.11-0.git4b3e853.fc44.3.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/iscsiuio.socket' → '/usr/lib/systemd/system/iscsiuio.socket'.
+>>> 
+[ 46/154] Installing libssh2-0:1.11.1-9 100% |  66.5 MiB/s | 340.2 KiB |  00m00s
+[ 47/154] Installing thrift-0:0.20.0-9. 100% | 179.4 MiB/s |   5.6 MiB |  00m00s
+[ 48/154] Installing librados2-2:20.2.4 100% |  86.4 MiB/s |  16.2 MiB |  00m00s
+[ 49/154] Installing librbd1-2:20.2.4-1 100% |  92.6 MiB/s |  12.9 MiB |  00m00s
+[ 50/154] Installing libfdt-0:1.8.1-6.f 100% |  30.8 MiB/s |  63.0 KiB |  00m00s
+[ 51/154] Installing igvm-libs-0:0.4.0- 100% | 113.5 MiB/s | 464.7 KiB |  00m00s
+[ 52/154] Installing SDL2_image-0:2.8.1 100% |   8.9 MiB/s | 219.3 KiB |  00m00s
+[ 53/154] Installing gvnc-0:1.5.0-4.fc4 100% |   8.5 MiB/s | 252.3 KiB |  00m00s
+[ 54/154] Installing gtk-vnc2-0:1.5.0-4 100% |  74.6 MiB/s | 229.2 KiB |  00m00s
+[ 55/154] Installing kf5-filesystem-0:5 100% |   1.1 MiB/s |   3.3 KiB |  00m00s
+[ 56/154] Installing xorriso-0:1.5.8-2. 100% |  11.2 MiB/s | 367.8 KiB |  00m00s
+[ 57/154] Installing ipxe-roms-qemu-0:2 100% |  52.8 MiB/s |   2.7 MiB |  00m00s
+>>> Running sysusers scriptlet: qemu-common-2:10.2.2-1.fc44.x86_64
+>>> Finished sysusers scriptlet: qemu-common-2:10.2.2-1.fc44.x86_64
+>>> Scriptlet output:
+>>> Failed to connect to audit log, ignoring: Invalid argument
+>>> /usr/lib/sysusers.d/plugdev.conf:1: Conflict with earlier configuration for group 'plugdev' in /usr/lib/sysusers.d/openrazer.conf:3, ignoring line.
+>>> Creating group 'qemu' with GID 107.
+>>> Creating user 'qemu' (qemu user) with UID 107 and GID 107.
+>>> 
+[ 58/154] Installing qemu-common-2:10.2 100% |  97.2 MiB/s |   2.6 MiB |  00m00s
+[ 59/154] Installing qemu-device-displa 100% |  34.4 MiB/s |  70.4 KiB |  00m00s
+[ 60/154] Installing qemu-ui-opengl-2:1 100% |  18.0 MiB/s |  36.8 KiB |  00m00s
+[ 61/154] Installing qemu-ui-spice-core 100% |  33.4 MiB/s |  68.5 KiB |  00m00s
+[ 62/154] Installing qemu-device-displa 100% |  15.3 MiB/s |  15.7 KiB |  00m00s
+[ 63/154] Installing qemu-device-displa 100% |  19.5 MiB/s |  20.0 KiB |  00m00s
+[ 64/154] Installing qemu-char-spice-2: 100% |  20.5 MiB/s |  21.0 KiB |  00m00s
+[ 65/154] Installing qemu-device-displa 100% |  23.0 MiB/s |  47.1 KiB |  00m00s
+[ 66/154] Installing qemu-device-displa 100% |  11.4 MiB/s |  11.6 KiB |  00m00s
+[ 67/154] Installing qemu-ui-spice-app- 100% |   7.8 MiB/s |  16.0 KiB |  00m00s
+[ 68/154] Installing qemu-device-displa 100% |  11.6 MiB/s |  11.8 KiB |  00m00s
+[ 69/154] Installing qemu-device-displa 100% |  11.6 MiB/s |  11.8 KiB |  00m00s
+[ 70/154] Installing qemu-device-displa 100% |  11.4 MiB/s |  11.7 KiB |  00m00s
+[ 71/154] Installing qemu-audio-spice-2 100% |  15.9 MiB/s |  16.2 KiB |  00m00s
+[ 72/154] Installing qemu-device-displa 100% |  42.9 MiB/s |  87.8 KiB |  00m00s
+[ 73/154] Installing qemu-ui-egl-headle 100% |  15.7 MiB/s |  16.1 KiB |  00m00s
+[ 74/154] Installing qemu-ui-gtk-2:10.2 100% |  42.5 MiB/s |  87.0 KiB |  00m00s
+[ 75/154] Installing qemu-ui-sdl-2:10.2 100% |  22.1 MiB/s |  45.3 KiB |  00m00s
+[ 76/154] Installing qemu-device-displa 100% |  11.4 MiB/s |  11.7 KiB |  00m00s
+[ 77/154] Installing qemu-audio-alsa-2: 100% |  28.4 MiB/s |  29.1 KiB |  00m00s
+[ 78/154] Installing qemu-audio-dbus-2: 100% | 139.0 MiB/s | 284.8 KiB |  00m00s
+[ 79/154] Installing qemu-audio-jack-2: 100% |  10.0 MiB/s |  20.4 KiB |  00m00s
+[ 80/154] Installing qemu-audio-oss-2:1 100% |   9.9 MiB/s |  20.3 KiB |  00m00s
+[ 81/154] Installing qemu-audio-pa-2:10 100% |  13.9 MiB/s |  28.4 KiB |  00m00s
+[ 82/154] Installing qemu-audio-pipewir 100% |  22.1 MiB/s |  45.2 KiB |  00m00s
+[ 83/154] Installing qemu-audio-sdl-2:1 100% |   9.9 MiB/s |  20.3 KiB |  00m00s
+[ 84/154] Installing qemu-block-curl-2: 100% |  31.8 MiB/s |  32.6 KiB |  00m00s
+[ 85/154] Installing qemu-block-dmg-2:1 100% |  11.5 MiB/s |  11.8 KiB |  00m00s
+[ 86/154] Installing qemu-block-gluster 100% |  35.2 MiB/s |  36.0 KiB |  00m00s
+[ 87/154] Installing qemu-block-iscsi-2 100% |  24.9 MiB/s |  51.0 KiB |  00m00s
+[ 88/154] Installing qemu-block-nfs-2:1 100% |  28.6 MiB/s |  29.3 KiB |  00m00s
+[ 89/154] Installing qemu-block-rbd-2:1 100% |  40.5 MiB/s |  41.5 KiB |  00m00s
+[ 90/154] Installing qemu-block-ssh-2:1 100% |  21.0 MiB/s |  43.1 KiB |  00m00s
+[ 91/154] Installing qemu-char-baum-2:1 100% |  19.5 MiB/s |  20.0 KiB |  00m00s
+[ 92/154] Installing qemu-device-displa 100% | 192.2 MiB/s | 787.4 KiB |  00m00s
+[ 93/154] Installing qemu-device-uefi-v 100% |  30.5 MiB/s |  62.5 KiB |  00m00s
+[ 94/154] Installing qemu-device-usb-ho 100% |  47.1 MiB/s |  48.2 KiB |  00m00s
+[ 95/154] Installing qemu-device-usb-re 100% |  33.6 MiB/s |  68.9 KiB |  00m00s
+[ 96/154] Installing qemu-device-usb-sm 100% |  31.4 MiB/s |  32.2 KiB |  00m00s
+[ 97/154] Installing qemu-ui-curses-2:1 100% |  19.6 MiB/s |  40.2 KiB |  00m00s
+[ 98/154] Installing virtiofsd-0:1.14.0 100% | 238.2 MiB/s |   2.4 MiB |  00m00s
+[ 99/154] Installing seavgabios-bin-0:1 100% | 180.2 MiB/s | 369.0 KiB |  00m00s
+[100/154] Installing seabios-bin-0:1.17 100% | 313.3 MiB/s | 962.3 KiB |  00m00s
+[101/154] Installing libxdp-0:1.6.3-1.f 100% |  41.5 MiB/s | 169.9 KiB |  00m00s
+[102/154] Installing qemu-system-x86-co 100% | 536.0 MiB/s |  60.6 MiB |  00m00s
+[103/154] Installing device-mapper-mult 100% |  44.8 MiB/s | 916.5 KiB |  00m00s
+[104/154] Installing qemu-pr-helper-2:1 100% |  56.4 MiB/s |   1.0 MiB |  00m00s
+[105/154] Installing rutabaga-gfx-ffi-0 100% | 121.0 MiB/s | 619.7 KiB |  00m00s
+[106/154] Installing qemu-device-displa 100% |  18.7 MiB/s |  38.3 KiB |  00m00s
+[107/154] Installing libblkio-0:1.5.0-5 100% | 149.7 MiB/s | 766.5 KiB |  00m00s
+[108/154] Installing qemu-block-blkio-2 100% |  35.8 MiB/s |  36.6 KiB |  00m00s
+[109/154] Installing qemu-system-x86-2: 100% |   0.0   B/s | 124.0   B |  00m00s
+[110/154] Installing scrub-0:2.6.1-12.f 100% |   8.9 MiB/s | 127.8 KiB |  00m00s
+[111/154] Installing iproute-tc-0:6.17. 100% |  31.6 MiB/s | 937.9 KiB |  00m00s
+[112/154] Installing libwsman1-0:2.8.1- 100% |  35.4 MiB/s | 362.9 KiB |  00m00s
+[113/154] Installing libvirt-libs-0:12. 100% | 157.0 MiB/s |  30.3 MiB |  00m00s
+>>> Running sysusers scriptlet: libvirt-daemon-common-0:12.0.0-3.fc44.x86_64
+>>> Finished sysusers scriptlet: libvirt-daemon-common-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Failed to connect to audit log, ignoring: Invalid argument
+>>> /usr/lib/sysusers.d/plugdev.conf:1: Conflict with earlier configuration for group 'plugdev' in /usr/lib/sysusers.d/openrazer.conf:3, ignoring line.
+>>> Creating group 'libvirt' with GID 954.
+>>> 
+[114/154] Installing libvirt-daemon-com 100% |   9.8 MiB/s | 462.9 KiB |  00m00s
+[115/154] Installing libvirt-daemon-dri 100% |  20.6 MiB/s | 906.8 KiB |  00m00s
+[116/154] Installing libvirt-daemon-dri 100% |   3.9 MiB/s | 892.9 KiB |  00m00s
+[117/154] Installing libvirt-daemon-log 100% |   3.0 MiB/s | 112.0 KiB |  00m00s
+[118/154] Installing libvirt-daemon-dri 100% |  37.8 MiB/s | 850.7 KiB |  00m00s
+[119/154] Installing python3-libvirt-0: 100% |  70.1 MiB/s |   2.2 MiB |  00m00s
+[120/154] Installing libvirt-daemon-loc 100% |   5.5 MiB/s | 101.6 KiB |  00m00s
+[121/154] Installing libvirt-daemon-plu 100% |  13.8 MiB/s |  28.2 KiB |  00m00s
+[122/154] Installing libvirt-client-qem 100% |   4.5 MiB/s |  64.7 KiB |  00m00s
+[123/154] Installing virt-manager-commo 100% |  68.3 MiB/s |   6.5 MiB |  00m00s
+[124/154] Installing libvirt-daemon-con 100% | 177.4 KiB/s |  14.2 KiB |  00m00s
+[125/154] Installing libvirt-daemon-dri 100% |  19.4 MiB/s | 875.1 KiB |  00m00s
+[126/154] Installing libvirt-daemon-con 100% |  14.6 KiB/s | 644.0   B |  00m00s
+[127/154] Installing libvirt-daemon-dri 100% |  40.6 MiB/s |   1.1 MiB |  00m00s
+[128/154] Installing libvirt-daemon-dri 100% |   9.3 MiB/s |  28.4 KiB |  00m00s
+[129/154] Installing libvirt-daemon-dri 100% |   8.9 MiB/s |  36.3 KiB |  00m00s
+[130/154] Installing libvirt-daemon-dri 100% |   9.9 MiB/s |  20.3 KiB |  00m00s
+[131/154] Installing libvirt-daemon-dri 100% |  13.9 MiB/s |  28.4 KiB |  00m00s
+[132/154] Installing libvirt-daemon-dri 100% |   1.9 MiB/s |  28.6 KiB |  00m00s
+[133/154] Installing libvirt-daemon-dri 100% |   7.9 MiB/s |  16.2 KiB |  00m00s
+[134/154] Installing libvirt-daemon-dri 100% |  19.8 MiB/s |  40.6 KiB |  00m00s
+[135/154] Installing libvirt-daemon-dri 100% |  19.7 MiB/s |  20.2 KiB |  00m00s
+[136/154] Installing libvirt-daemon-dri 100% |   6.1 KiB/s | 124.0   B |  00m00s
+[137/154] Installing libvirt-daemon-dri 100% |  19.1 MiB/s | 760.8 KiB |  00m00s
+[138/154] Installing libvirt-daemon-dri 100% |  24.3 MiB/s |   1.0 MiB |  00m00s
+[139/154] Installing libvirt-daemon-dri 100% |  19.9 MiB/s | 752.7 KiB |  00m00s
+[140/154] Installing libvirt-daemon-dri 100% |  44.2 MiB/s | 951.2 KiB |  00m00s
+[141/154] Installing libvirt-client-0:1 100% |  23.3 MiB/s |   1.0 MiB |  00m00s
+[142/154] Installing libvirt-daemon-pro 100% |  20.0 MiB/s | 735.7 KiB |  00m00s
+[143/154] Installing libvirt-daemon-0:1 100% |  36.1 MiB/s | 738.5 KiB |  00m00s
+[144/154] Installing libvirt-glib-0:5.0 100% |   5.6 MiB/s | 137.7 KiB |  00m00s
+[145/154] Installing lzop-0:1.04-18.fc4 100% |   1.3 MiB/s | 100.2 KiB |  00m00s
+>>> Running sysusers scriptlet: libvirt-daemon-driver-qemu-0:12.0.0-3.fc44.x86_64
+>>> Finished sysusers scriptlet: libvirt-daemon-driver-qemu-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Failed to connect to audit log, ignoring: Invalid argument
+>>> /usr/lib/sysusers.d/plugdev.conf:1: Conflict with earlier configuration for group 'plugdev' in /usr/lib/sysusers.d/openrazer.conf:3, ignoring line.
+>>> 
+[146/154] Installing libvirt-daemon-dri 100% |  96.7 MiB/s |   2.9 MiB |  00m00s
+[147/154] Installing mdevctl-0:1.4.0-3. 100% |  64.1 MiB/s |   2.4 MiB |  00m00s
+[148/154] Installing libvirt-daemon-dri 100% |  40.3 MiB/s | 825.5 KiB |  00m00s
+[149/154] Installing libvirt-0:12.0.0-3 100% | 121.1 KiB/s | 124.0   B |  00m00s
+[150/154] Installing virt-manager-0:5.1 100% |  62.9 MiB/s |   3.6 MiB |  00m00s
+[151/154] Installing qemu-kvm-2:10.2.2- 100% |   0.0   B/s | 124.0   B |  00m00s
+[152/154] Installing rEFInd-0:0.14.2-5. 100% | 121.1 KiB/s | 124.0   B |  00m00s
+[153/154] Installing gnome-software-0:5 100% |  86.6 MiB/s |  12.5 MiB |  00m00s
+[154/154] Installing gnome-terminal-0:3 100% |   2.7 MiB/s |   8.7 MiB |  00m03s
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-storage-core-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-storage-core-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtstoraged.socket' → '/usr/lib/systemd/system/virtstoraged.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtstoraged-ro.socket' → '/usr/lib/systemd/system/virtstoraged-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtstoraged-admin.socket' → '/usr/lib/systemd/system/virtstoraged-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-network-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-network-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnetworkd.socket' → '/usr/lib/systemd/system/virtnetworkd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnetworkd-ro.socket' → '/usr/lib/systemd/system/virtnetworkd-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnetworkd-admin.socket' → '/usr/lib/systemd/system/virtnetworkd-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-log-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-log-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtlogd.socket' → '/usr/lib/systemd/system/virtlogd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtlogd-admin.socket' → '/usr/lib/systemd/system/virtlogd-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-nwfilter-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-nwfilter-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnwfilterd.socket' → '/usr/lib/systemd/system/virtnwfilterd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnwfilterd-ro.socket' → '/usr/lib/systemd/system/virtnwfilterd-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnwfilterd-admin.socket' → '/usr/lib/systemd/system/virtnwfilterd-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-lock-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-lock-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtlockd.socket' → '/usr/lib/systemd/system/virtlockd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtlockd-admin.socket' → '/usr/lib/systemd/system/virtlockd-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-lxc-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-lxc-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtlxcd.socket' → '/usr/lib/systemd/system/virtlxcd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtlxcd-ro.socket' → '/usr/lib/systemd/system/virtlxcd-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtlxcd-admin.socket' → '/usr/lib/systemd/system/virtlxcd-admin.socket'.
+>>> Created symlink '/etc/systemd/system/multi-user.target.wants/virtlxcd.service' → '/usr/lib/systemd/system/virtlxcd.service'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-interface-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-interface-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtinterfaced.socket' → '/usr/lib/systemd/system/virtinterfaced.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtinterfaced-ro.socket' → '/usr/lib/systemd/system/virtinterfaced-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtinterfaced-admin.socket' → '/usr/lib/systemd/system/virtinterfaced-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-libxl-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-libxl-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtxend.socket' → '/usr/lib/systemd/system/virtxend.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtxend-ro.socket' → '/usr/lib/systemd/system/virtxend-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtxend-admin.socket' → '/usr/lib/systemd/system/virtxend-admin.socket'.
+>>> Created symlink '/etc/systemd/system/multi-user.target.wants/virtxend.service' → '/usr/lib/systemd/system/virtxend.service'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-secret-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-secret-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtsecretd.socket' → '/usr/lib/systemd/system/virtsecretd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtsecretd-ro.socket' → '/usr/lib/systemd/system/virtsecretd-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtsecretd-admin.socket' → '/usr/lib/systemd/system/virtsecretd-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-vbox-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-vbox-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtvboxd.socket' → '/usr/lib/systemd/system/virtvboxd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtvboxd-ro.socket' → '/usr/lib/systemd/system/virtvboxd-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtvboxd-admin.socket' → '/usr/lib/systemd/system/virtvboxd-admin.socket'.
+>>> Created symlink '/etc/systemd/system/multi-user.target.wants/virtvboxd.service' → '/usr/lib/systemd/system/virtvboxd.service'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-proxy-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-proxy-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtproxyd.socket' → '/usr/lib/systemd/system/virtproxyd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtproxyd-ro.socket' → '/usr/lib/systemd/system/virtproxyd-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtproxyd-admin.socket' → '/usr/lib/systemd/system/virtproxyd-admin.socket'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-qemu-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-qemu-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtqemud.socket' → '/usr/lib/systemd/system/virtqemud.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtqemud-ro.socket' → '/usr/lib/systemd/system/virtqemud-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtqemud-admin.socket' → '/usr/lib/systemd/system/virtqemud-admin.socket'.
+>>> Created symlink '/etc/systemd/system/multi-user.target.wants/virtqemud.service' → '/usr/lib/systemd/system/virtqemud.service'.
+>>> 
+>>> Running %posttrans scriptlet: libvirt-daemon-driver-nodedev-0:12.0.0-3.fc44.x86_64
+>>> Finished %posttrans scriptlet: libvirt-daemon-driver-nodedev-0:12.0.0-3.fc44.x86_64
+>>> Scriptlet output:
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnodedevd.socket' → '/usr/lib/systemd/system/virtnodedevd.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnodedevd-ro.socket' → '/usr/lib/systemd/system/virtnodedevd-ro.socket'.
+>>> Created symlink '/etc/systemd/system/sockets.target.wants/virtnodedevd-admin.socket' → '/usr/lib/systemd/system/virtnodedevd-admin.socket'.
+>>> 
+>>> Running %triggerin scriptlet: systemd-0:259.9-1.fc44.x86_64
+>>> Finished %triggerin scriptlet: systemd-0:259.9-1.fc44.x86_64
+>>> Scriptlet output:
+>>> Failed to connect to audit log, ignoring: Invalid argument
+>>> /usr/lib/sysusers.d/plugdev.conf:1: Conflict with earlier configuration for group 'plugdev' in /usr/lib/sysusers.d/openrazer.conf:3, ignoring line.
+>>> 
+Complete!
+No excluded packages are installed during post-install verification.
+Created symlink '/etc/systemd/system/bazzite-flatpak-manager.service' → '/dev/null'.
+Created symlink '/etc/systemd/user/bazzite-user-setup.service' → '/dev/null'.
+Warning: Schema “org.freedesktop.IBus.Chewing” has path “/desktop/ibus/engine/chewing/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.freedesktop.ibus” has path “/desktop/ibus/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.freedesktop.ibus.general” has path “/desktop/ibus/general/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.freedesktop.ibus.general.hotkey” has path “/desktop/ibus/general/hotkey/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.freedesktop.ibus.panel” has path “/desktop/ibus/panel/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.freedesktop.ibus.panel.emoji” has path “/desktop/ibus/panel/emoji/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.crypto.cache” has path “/desktop/gnome/crypto/cache/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.crypto.pgp” has path “/desktop/gnome/crypto/pgp/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.system.locale” has path “/system/locale/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.system.proxy” has path “/system/proxy/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.system.proxy.http” has path “/system/proxy/http/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.system.proxy.https” has path “/system/proxy/https/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.system.proxy.ftp” has path “/system/proxy/ftp/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+Warning: Schema “org.gnome.system.proxy.socks” has path “/system/proxy/socks/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
+No such key “picture-uri-dark” in schema “org.gnome.desktop.screensaver” as specified in override file “/usr/share/glib-2.0/schemas/10_org.gnome.desktop.screensaver.fedora.gschema.override”; ignoring override for this key.
+dracut[E]: No '/dev/log' or 'logger' included for syslog logging
+/tmp/tela.tar.gz: OK
+  [1;36mInstalling 'Tela'...[0m
+gtk-update-icon-cache: Cache file created successfully.
+  [1;36mInstalling 'Tela-light'...[0m
+gtk-update-icon-cache: Cache file created successfully.
+  [1;36mInstalling 'Tela-dark'...[0m
+gtk-update-icon-cache: Cache file created successfully.
+/etc/flatpak/remotes.d/flathub.flatpakrepo: OK
+Created symlink '/etc/systemd/system/graphical.target.wants/dconf-update.service' → '/usr/lib/systemd/system/dconf-update.service'.
+Created symlink '/etc/systemd/user/default.target.wants/ublue-user-flatpak-manager.service' → '/usr/lib/systemd/user/ublue-user-flatpak-manager.service'.
+Removed 0 files, 0 directories (total of 0 B). 0 errors occurred.
+--> 831945bd2157
+[3/3] STEP 11/11: RUN --mount=type=tmpfs,target=/run     --mount=type=tmpfs,target=/tmp     systemctl mask dmemcg-booster-system.service &&     systemctl --global mask dmemcg-booster-user.service &&     dconf update &&     systemd-analyze verify /usr/lib/systemd/system/dconf-update.service &&     mkdir -p /tmp/up-user-runtime &&     XDG_RUNTIME_DIR=/tmp/up-user-runtime systemd-analyze --user verify       /usr/lib/systemd/user/ublue-user-flatpak-manager.service &&     /usr/libexec/up-verify-image &&     systemd-tmpfiles --create /usr/lib/tmpfiles.d/up-virtualization.conf &&     rm -rf /var/lib/dnf /var/lib/flatpak /var/roothome &&     rm -f /var/log/dnf5.log &&     bootc container lint --fatal-warnings
+Created symlink '/etc/systemd/system/dmemcg-booster-system.service' → '/dev/null'.
+Created symlink '/etc/systemd/user/dmemcg-booster-user.service' → '/dev/null'.
+gnome-shell-50.5-1.fc44.x86_64
+mutter-50.5-1.fc44.x86_64
+gdm-50.3-1.fc44.x86_64
+gnome-terminal-3.60.0-1.fc44.x86_64
+gnome-software-50.4-1.fc44.x86_64
+steam-1.0.0.87-5.fc44.x86_64
+steam-devices-1.0.0.101^git20260625.22ec85e-1.fc44.noarch
+mesa-dri-drivers-26.2.4-1.fc44.x86_64
+mesa-dri-drivers-26.2.4-1.fc44.i686
+mesa-vulkan-drivers-26.2.4-1.fc44.x86_64
+mesa-vulkan-drivers-26.2.4-1.fc44.i686
+vulkan-loader-1.4.341.0-1.fc44.x86_64
+vulkan-loader-1.4.341.0-1.fc44.i686
+libFAudio-25.05-4.fc44.i686
+terra-gamescope-3.16.31^2-1.fc44.x86_64
+terra-mangohud-0.8.4-2.fc44.x86_64
+terra-mangohud-0.8.4-2.fc44.i686
+vkBasalt-0.3.2.10-8.fc44.x86_64
+vkBasalt-0.3.2.10-8.fc44.i686
+openxr-1.1.63-1.fc44.x86_64
+pipewire-1.6.9-1.fc44.x86_64
+terra-wireplumber-0.5.17-1.fc44.x86_64
+virt-manager-5.1.0-4.fc44.noarch
+libvirt-12.0.0-3.fc44.x86_64
+qemu-kvm-10.2.2-1.fc44.x86_64
+rEFInd-0.14.2-5.fc44.x86_64
+xorg-x11-server-Xwayland-24.1.11.bazzite.0.0.git.7700.2d6aa7f1-1.fc44.x86_64
+true
+true
+Verified image contents and OGC boot artifacts: 7.2.8-ogc5.1.fc44.x86_64 (boot not tested)
+Checks passed: 14
+Checks skipped: 1
+[3/3] COMMIT localhost/up:before-minimal
+--> dfc9b8254261
+Successfully tagged localhost/up:before-minimal
+dfc9b8254261528a86db05be3d172611d76cfa2005c44ac84048faa2c9d4ed12

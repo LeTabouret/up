@@ -1,10 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^Containerfile$/"],
+      "managerFilePatterns": [
+        "/^Containerfile$/"
+      ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\nFROM \\S+:(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"
       ]
@@ -12,22 +16,19 @@
   ],
   "packageRules": [
     {
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "pinDigests": true
     },
     {
-      "description": "Automerge trusted Universal Blue base image digest updates after CI",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/ublue-os/silverblue-main"],
-      "matchUpdateTypes": ["digest"],
-      "automerge": true,
-      "automergeType": "pr"
-    },
-    {
-      "description": "Require manual review for OGC kernel digest updates",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/ublue-os/akmods"],
-      "matchUpdateTypes": ["digest"],
+      "description": "Review Bazzite stable digest updates after image CI and hardware canary",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/ublue-os/bazzite-gnome"
+      ],
       "automerge": false
     }
   ]

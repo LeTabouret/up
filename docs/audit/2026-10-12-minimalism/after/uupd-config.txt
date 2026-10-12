@@ -1,0 +1,34 @@
+{
+    "checks": {
+        "hardware": {
+            "bat-min-percent": 20,
+            "cpu-max-percent": 50,
+            "enable": true,
+            "mem-max-percent": 90,
+            "net-max-bytes": 700000
+        }
+    },
+    "modules": {
+        "brew": {
+            "cellar": "/home/linuxbrew/.linuxbrew/Cellar",
+            "disable": false,
+            "path": "/home/linuxbrew/.linuxbrew/bin/brew",
+            "prefix": "/home/linuxbrew/.linuxbrew",
+            "repository": "/home/linuxbrew/.linuxbrew/Homebrew"
+        },
+        "distrobox": {
+            "binary-path": "/usr/bin/distrobox",
+            "disable": true
+        },
+        "flatpak": {
+            "binary-path": "/usr/bin/flatpak",
+            "disable": false
+        },
+        "system": {
+            "bootc-binary": "/usr/bin/bootc",
+            "disable": false,
+            "rpm-ostree-binary": "/usr/bin/rpm-ostree",
+            "skopeo-binary": "/usr/bin/skopeo"
+        }
+    }
+}

@@ -26,8 +26,8 @@ desired_state_hash() {
 }
 
 main() {
-    local desired_hash previous_hash="" application
-    local -a install_list=() remove_list=() installed_removals=()
+    local desired_hash previous_hash="" application user_apps system_apps
+    local -a install_list=() remove_list=() installed_removals=() missing_apps=()
 
     mapfile -t install_list < <(read_list "$INSTALL_FILE")
     mapfile -t remove_list < <(read_list "$REMOVE_FILE")
@@ -38,15 +38,22 @@ main() {
         return 0
     fi
 
-    mkdir -p "$STATE_DIR"
-    if flatpak remotes --user --columns=name | grep -Fxq fedora; then
-        flatpak remote-delete --user --force fedora
-    fi
-    flatpak remote-add --user --if-not-exists flathub "$REMOTE_FILE"
-    flatpak remote-modify --user --enable --prio=2 flathub
+    # Abort on a scope-query failure instead of mistaking it for an empty scope.
+    # Respect an existing app's installation and origin; uupd handles updates.
+    user_apps="$(flatpak list --user --app --columns=application)"
+    system_apps="$(flatpak list --system --app --columns=application)"
+    for application in "${install_list[@]}"; do
+        if ! grep -Fxq -- "$application" <<< "$user_apps" &&
+            ! grep -Fxq -- "$application" <<< "$system_apps"; then
+            missing_apps+=("$application")
+        fi
+    done
 
-    if ((${#install_list[@]} > 0)); then
-        flatpak install --user --noninteractive --or-update -- flathub "${install_list[@]}"
+    mkdir -p "$STATE_DIR"
+    if ((${#missing_apps[@]} > 0)); then
+        # --if-not-exists preserves an existing remote's URL and preferences.
+        flatpak remote-add --user --if-not-exists flathub "$REMOTE_FILE"
+        flatpak install --user --noninteractive -- flathub "${missing_apps[@]}"
     fi
     for application in "${remove_list[@]}"; do
         if flatpak info --user "$application" > /dev/null 2>&1; then

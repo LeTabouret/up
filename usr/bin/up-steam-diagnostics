@@ -1,0 +1,104 @@
+#!/usr/bin/python3
+"""Read-only, offline summary. No raw logs, account IDs, serials, or environment values."""
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+
+ENV_NAMES = (
+    "LD_PRELOAD", "LD_LIBRARY_PATH", "LIBGL_ALWAYS_SOFTWARE", "MESA_LOADER_DRIVER_OVERRIDE",
+    "RADV_PERFTEST", "RADV_DEBUG", "AMD_VULKAN_ICD", "VK_ICD_FILENAMES", "VK_DRIVER_FILES",
+    "MESA_SHADER_CACHE_DISABLE", "GDK_BACKEND", "GDK_SCALE", "GDK_DPI_SCALE",
+    "STEAM_RUNTIME", "STEAM_RUNTIME_PREFER_HOST_LIBRARIES", "PROTON_USE_WINED3D",
+    "PROTON_NO_ESYNC", "PROTON_NO_FSYNC", "DXVK_ASYNC", "MANGOHUD", "ENABLE_VKBASALT",
+)
+PACKAGES = (
+    "kernel-core", "steam", "steam-devices", "gnome-shell", "mutter",
+    "mesa-dri-drivers", "mesa-vulkan-drivers", "mesa-libGL", "vulkan-loader",
+    "xorg-x11-server-Xwayland", "terra-xorg-x11-server-Xwayland",
+    "pipewire", "wireplumber", "terra-wireplumber", "terra-gamescope",
+)
+
+
+def command(*args):
+    try:
+        result = subprocess.run(args, capture_output=True, text=True, timeout=20,
+                                check=False, env={**os.environ, "LC_ALL": "C"})
+        return result.returncode, result.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return 127, ""
+
+
+def present_environment(data):
+    return sorted(name for name in ENV_NAMES if name in data)
+
+
+def log_counts(path):
+    if not path.is_file():
+        return {"present": False}
+    try:
+        # Bound memory/time; never include raw contents in the report.
+        with path.open("rb") as stream:
+            stream.seek(max(0, path.stat().st_size - 2_000_000))
+            text = stream.read(2_000_000).decode("utf-8", errors="replace")
+        return {"present": True, "last_2MB_only": True,
+                "counts": {term: len(re.findall(term, text, re.I))
+                           for term in ("gpu process", "context lost", "gpu crash", "error")}}
+    except OSError:
+        return {"present": True, "readable": False}
+
+
+def collect(graphics=False):
+    report = {"schema": 1, "kernel": os.uname().release,
+              "session": os.environ.get("XDG_SESSION_TYPE")
+              if os.environ.get("XDG_SESSION_TYPE") in ("wayland", "x11", "tty") else "unknown",
+              "environment_variable_names_present": present_environment(os.environ)}
+    status, text = command("rpm", "-q", "--queryformat", "%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\\n",
+                           *PACKAGES)
+    report["rpm_query_status"] = status
+    report["packages"] = [line for line in text.splitlines()
+                          if re.fullmatch(r"[\w.+-]+ [\w.+:~^-]+ (x86_64|i686|noarch)", line)]
+    report["flatpak_steam"] = {}
+    for scope in ("user", "system"):
+        status, text = command("flatpak", "info", "--" + scope, "--show-runtime",
+                               "com.valvesoftware.Steam")
+        report["flatpak_steam"][scope] = {"installed": status == 0,
+                                         "probe_available": status != 127,
+                                         "runtime": text.strip() if re.fullmatch(
+                                             r"[\w./-]+\s*", text) else None}
+    _, text = command("lspci", "-nn")
+    report["graphics_devices"] = [line for line in text.splitlines()
+                                  if re.search(r"VGA compatible controller|3D controller|Display controller", line)]
+    steam = Path.home() / ".local/share/Steam"
+    report["native_steam_data_present"] = steam.is_dir()
+    report["steam_logs"] = {name: log_counts(steam / "logs" / name)
+                            for name in ("cef_log.txt", "webhelper.txt", "console-linux.txt")}
+    report["steam_process_environment_names"] = []
+    for proc in Path("/proc").glob("[0-9]*"):
+        try:
+            if proc.stat().st_uid != os.getuid():
+                continue
+            if (proc / "comm").read_text().strip() not in ("steam", "steamwebhelper"):
+                continue
+            names = {entry.split(b"=", 1)[0].decode(errors="replace")
+                     for entry in (proc / "environ").read_bytes().split(b"\0")}
+            report["steam_process_environment_names"].append(present_environment(names))
+        except OSError:
+            continue
+    if graphics:
+        status, text = command("vulkaninfo", "--summary")
+        allowed = r"\s*(apiVersion|driverVersion|vendorID|deviceID|deviceType|deviceName|driverName|driverInfo)\s*=.*"
+        report["vulkan"] = {"exit_status": status,
+                            "devices": [line.strip() for line in text.splitlines()
+                                        if re.fullmatch(allowed, line)]}
+    return report
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--graphics", action="store_true",
+                        help="Also initialize Vulkan with vulkaninfo; run from the desktop session.")
+    args = parser.parse_args()
+    print(json.dumps(collect(args.graphics), indent=2))

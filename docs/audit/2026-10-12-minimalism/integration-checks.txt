@@ -1,0 +1,68 @@
+# This file is intended for low priority configuration:
+# xdg-terminal-exec/xdg-terminals in the last item of $XDG_DATA_DIRS.
+# i.e. /usr/share/xdg-terminal-exec/xdg-terminals
+
+# exclude unsupported terminals from fallback selection
+-org.kde.yakuake.desktop
+-kitty-open.desktop
+-foot-server.desktop
+
+# exclude clients (can be unexcluded or set explicitly)
+-footclient.desktop
+
+# add custom ExecArg defaults for various terminals, derived from:
+# https://github.com/albertlauncher/albert/blob/6783257df7e15dcfbae49d03023414b7c3692dbd/src/app/terminalprovider.cpp#L120-L150
+/execarg_default:com.raggesilver.BlackBox.desktop:--
+/execarg_default:contour.desktop:execute
+/execarg_default:deepin-terminal.desktop:-x
+/execarg_default:io.elementary.terminal.desktop:-x
+/execarg_default:org.codeberg.dnkl.foot.desktop:--
+/execarg_default:org.gnome.Terminal.desktop:--
+/execarg_default:kitty.desktop:--
+/execarg_default:mate-terminal.desktop:-x
+/execarg_default:roxterm.desktop:-x
+/execarg_default:terminator.desktop:-x
+/execarg_default:xfce4-terminal.desktop:-x
+ACTION=="add", SUBSYSTEM=="usb", ENV{ID_VENDOR}=="DisplayLink", MODE="0660", TAG+="systemd", ENV{SYSTEMD_WANTS}+="displaylink.service"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{ID_VENDOR}=="DisplayLink", RUN+="/bin/systemctl stop displaylink.service"
+Usage:
+  dnf5 [GLOBAL OPTIONS] replay [OPTIONS] [ARGUMENTS] 
+                                
+Options:                        
+  --skip-broken                 Allow resolving of depsolve problems by skipping packages
+  --skip-unavailable            Allow skipping unavailable packages
+  --ignore-extras               Don't consider extra packages pulled into the transaction as errors.
+  --ignore-installed            Don't consider mismatches between installed and stored transaction packages as errors. This can result in an empty transaction because among other things the option can ignore failing Remove actions.
+                                
+Arguments:                      
+  transaction-path              Path to a directory with stored transaction. Only a single path with one transaction is supported.
+[Unit]
+Description=Run CEC actions on boot
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=-/usr/bin/cec-control onboot
+
+[Install]
+WantedBy=multi-user.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+[Unit]
+Description=Setup Brew
+Wants=basic.target
+After=basic.target
+ConditionPathExists=!/etc/.linuxbrew
+ConditionPathExists=!/home/linuxbrew/.linuxbrew
+ConditionPathExists=/usr/share/homebrew.tar.zst
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mkdir -p /tmp/homebrew
+ExecStart=/usr/bin/mkdir -p /home/linuxbrew
+ExecStart=/usr/bin/tar --zstd -xf /usr/share/homebrew.tar.zst -C /tmp/homebrew
+ExecStart=/usr/bin/cp -R -n /tmp/homebrew/home/linuxbrew/.linuxbrew /home/linuxbrew
+ExecStart=/usr/bin/chown -R 1000:1000 /home/linuxbrew
+ExecStart=/usr/bin/rm -rf /tmp/homebrew
+ExecStart=/usr/bin/touch /etc/.linuxbrew
+
+[Install]
+WantedBy=default.target multi-user.target

@@ -1,0 +1,36 @@
+No excluded packages requested during empty.
+No excluded packages are installed during absent.
+Removing excluded packages during partial: installed partial
+Removing excluded packages during populated: installed
+Removing excluded packages during several: installed partial
+Refusing to remove 51 packages during ceiling (limit: 50).
+Package-removal safety tests passed.
+Packages to install: (none)
+Packages to exclude: toolbox
+Removing excluded packages during pre-install: toolbox
+No packages requested for installation.
+No excluded packages are installed during post-install verification.
+Unexpected dependency removal: kernel-core. Refusing this image.
+Transitive removal rejection passed.
+Packages to install: (none)
+Packages to exclude: toolbox
+Removing excluded packages during pre-install: toolbox
+No packages requested for installation.
+No excluded packages are installed during post-install verification.
+Unexpected dependency removal: libFAudio.i686. Refusing this image.
+Multilib removal rejection passed.
+Managed Flatpak configuration is unchanged.
+Flatpak configuration tests passed.
+JSON validation tests passed.
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.010s
+
+OK
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK
+Polkit helper authentication tests passed.
+Repository validation passed.

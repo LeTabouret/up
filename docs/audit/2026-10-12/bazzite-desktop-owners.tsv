@@ -1,0 +1,55 @@
+rpm	desktop-files-in-rpm-manifest-not-visibility	direct-name-reverse-requires-not-complete-solver
+bazaar	io.github.kolunmi.Bazaar.desktop	
+bazzite-portal	io.github.ublue_os.yafti_gtk.desktop	
+bazzite-updater	io.github.rfrench3.bazzite-updater.desktop	
+btop	btop.desktop	
+btrfs-assistant	btrfs-assistant.desktop	
+cardwire-gui	cardwire-gui.desktop	
+evolution-data-server	org.gnome.Evolution-alarm-notify.desktop,org.gnome.evolution-data-server.OAuth2-handler.desktop	evolution-data-server-langpacks,evolution-ews-core
+firewall-config	firewall-config.desktop	
+gcr3	gcr-prompter.desktop,gcr-viewer.desktop	gnome-keyring
+geoclue2	geoclue-demo-agent.desktop	gnome-settings-daemon,xdg-desktop-portal
+gnome-bluetooth	bluetooth-sendto.desktop	
+gnome-browser-connector	org.gnome.BrowserConnector.desktop	
+gnome-color-manager	gcm-import.desktop,gcm-picker.desktop,org.gnome.ColorProfileViewer.desktop	
+gnome-control-center	gnome-about-panel.desktop,gnome-applications-panel.desktop,gnome-background-panel.desktop,gnome-bluetooth-panel.desktop,gnome-color-panel.desktop,gnome-datetime-panel.desktop,gnome-display-panel.desktop,gnome-keyboard-panel.desktop,gnome-mouse-panel.desktop,gnome-multitasking-panel.desktop,gnome-network-panel.desktop,gnome-notifications-panel.desktop,gnome-online-accounts-panel.desktop,gnome-power-panel.desktop,gnome-printers-panel.desktop,gnome-privacy-panel.desktop,gnome-region-panel.desktop,gnome-search-panel.desktop,gnome-sharing-panel.desktop,gnome-sound-panel.desktop,gnome-system-panel.desktop,gnome-universal-access-panel.desktop,gnome-users-panel.desktop,gnome-wacom-panel.desktop,gnome-wellbeing-panel.desktop,gnome-wifi-panel.desktop,gnome-wwan-panel.desktop,org.gnome.Settings.desktop	gnome-shell
+gnome-disk-utility	gnome-disk-image-mounter.desktop,gnome-disk-image-writer.desktop,org.gnome.DiskUtility.desktop	
+gnome-online-accounts	org.gnome.OnlineAccounts.OAuth2.desktop,org.gnome.goa-daemon.desktop	
+gnome-shell	org.gnome.Shell.Extensions.desktop,org.gnome.Shell.PortalHelper.desktop	gdm,gnome-browser-connector,gnome-session-wayland-session,gnome-shell-extension-common,gnome-shell-extension-gsconnect
+gnome-shell-extension-gsconnect	org.gnome.Shell.Extensions.GSConnect.Preferences.desktop,org.gnome.Shell.Extensions.GSConnect.desktop	nautilus-gsconnect
+gnome-user-share	gnome-user-share-webdav.desktop	
+ibus	org.freedesktop.IBus.Panel.Emojier.desktop,org.freedesktop.IBus.Panel.Extension.Gtk3.desktop	ibus-anthy,ibus-hangul,ibus-libpinyin,ibus-m17n,ibus-setup,ibus-typing-booster,ibus-unikey
+ibus-anthy	ibus-setup-anthy.desktop	ibus-anthy-python
+ibus-chewing	ibus-setup-chewing.desktop	
+ibus-hangul	ibus-setup-hangul.desktop	
+ibus-libpinyin	ibus-setup-libbopomofo.desktop,ibus-setup-libpinyin.desktop	
+ibus-m17n	ibus-setup-m17n.desktop	
+ibus-mozc	ibus-setup-mozc-jp.desktop	
+ibus-setup	org.freedesktop.IBus.Setup.desktop	
+ibus-typing-booster	ibus-setup-tb.desktop,ibus-setup-typing-booster.desktop	
+ibus-unikey	ibus-setup-Unikey.desktop	
+input-remapper	input-remapper-gtk.desktop	
+kf6-kguiaddons	cartes-geo-handler.desktop,google-maps-geo-handler.desktop,openstreetmap-geo-handler.desktop,wheelmap-geo-handler.desktop	
+libgnomekbd	gkbd-keyboard-display.desktop	
+lutris	net.lutris.Lutris.desktop,net.lutris.Lutris1.desktop	
+makemkv	makemkv.desktop	
+malcontent-control	org.freedesktop.MalcontentControl.desktop	
+msedit	com.microsoft.edit.desktop	
+nautilus	nautilus-autorun-software.desktop,org.gnome.Nautilus.desktop	
+nvtop	nvtop.desktop	
+orca	orca.desktop	
+papers-previewer	org.gnome.Papers-previewer.desktop	
+ptyxis	org.gnome.Ptyxis.desktop	
+rom-properties-common	com.gerbilsoft.rom-properties.rp-config.desktop	rom-properties
+rygel	rygel-preferences.desktop,rygel.desktop	
+steam	steam.desktop	
+tecla	org.gnome.Tecla.desktop	gnome-shell
+waydroid	Waydroid.desktop,waydroid.app.install.desktop,waydroid.market.desktop	waydroid-selinux
+webapp-manager	webapp-manager.desktop	
+xdg-desktop-portal-gnome	xdg-desktop-portal-gnome.desktop	gnome-shell
+xdg-desktop-portal-gtk	xdg-desktop-portal-gtk.desktop	gnome-shell
+xdg-user-dirs-gtk	user-dirs-update-gtk.desktop	gnome-shell
+xorg-x11-server-Xwayland	org.freedesktop.Xwayland.desktop	terra-gamescope
+yad	yad-icon-browser.desktop	
+yelp	org.gnome.Yelp.desktop	
+zenity	org.gnome.Zenity.desktop	steam
