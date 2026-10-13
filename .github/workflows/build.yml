@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: image-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 permissions:
   contents: read
 env:
@@ -38,10 +38,10 @@ jobs:
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: v3.1.3
-      - name: Verify pinned upstream signature
-        run: |
-          base=$(awk '/^FROM ghcr.io\/ublue-os\/bazzite-gnome:/ {print $2}' Containerfile)
-          cosign verify --key keys/bazzite.pub --new-bundle-format=false "$base"
+      - name: Install registry tools
+        run: sudo apt-get update && sudo apt-get install --yes skopeo
+      - name: Resolve and verify compatible upstream
+        run: bash .github/scripts/resolve-base.sh pinned
       - name: Image coordinates
         id: image
         shell: bash
@@ -57,6 +57,7 @@ jobs:
           VERSION: ${{ steps.image.outputs.version }}
         run: |
           podman build --tag localhost/up:build --file Containerfile \
+            --label "org.opencontainers.image.base.digest=${BASE_DIGEST}" \
             --build-arg "IMAGE_REPOSITORY=${REPOSITORY}" \
             --build-arg "IMAGE_VERSION=${VERSION}" \
             --build-arg "IMAGE_CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -65,6 +66,10 @@ jobs:
         run: tests/image-smoke.sh localhost/up:build
   publish:
     name: Build, verify and sign candidate
+    # Serialize all release writers with the manual promotion workflow.
+    concurrency:
+      group: up-release-promotion
+      cancel-in-progress: false
     if: >-
       github.event_name != 'pull_request' &&
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
@@ -79,10 +84,10 @@ jobs:
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: v3.1.3
-      - name: Verify pinned upstream signature
-        run: |
-          base=$(awk '/^FROM ghcr.io\/ublue-os\/bazzite-gnome:/ {print $2}' Containerfile)
-          cosign verify --key keys/bazzite.pub --new-bundle-format=false "$base"
+      - name: Install registry tools
+        run: sudo apt-get update && sudo apt-get install --yes skopeo
+      - name: Resolve and verify compatible upstream
+        run: bash .github/scripts/resolve-base.sh refresh
       - name: Image coordinates
         id: image
         shell: bash
@@ -98,6 +103,7 @@ jobs:
           VERSION: ${{ steps.image.outputs.version }}
         run: |
           podman build --tag localhost/up:build --file Containerfile \
+            --label "org.opencontainers.image.base.digest=${BASE_DIGEST}" \
             --build-arg "IMAGE_REPOSITORY=${REPOSITORY}" \
             --build-arg "IMAGE_VERSION=${VERSION}" \
             --build-arg "IMAGE_CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -126,4 +132,25 @@ jobs:
           digest=$(cat "${RUNNER_TEMP}/up-digest")
           cosign sign --yes --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY "${REPOSITORY}@${digest}"
           cosign verify --key cosign.pub --new-bundle-format=false "${REPOSITORY}@${digest}"
-          echo "Verified candidate (promotion requires VM and hardware validation): ${REPOSITORY}@${digest}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verified candidate: ${REPOSITORY}@${digest}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Automatically publish approved daily update
+        if: >-
+          github.event_name == 'schedule' &&
+          vars.BAZZITE_AUTO_PUBLISH_FEDORA == env.FEDORA_VERSION
+        env:
+          BAZZITE_AUTO_PUBLISH_FEDORA: ${{ vars.BAZZITE_AUTO_PUBLISH_FEDORA }}
+          REPOSITORY: ${{ steps.image.outputs.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export DOCKER_CONFIG="${RUNNER_TEMP}/up-docker"
+          export REGISTRY_AUTH_FILE="${DOCKER_CONFIG}/config.json"
+          DIGEST=$(cat "${RUNNER_TEMP}/up-digest")
+          export DIGEST
+          bash .github/scripts/promote-image.sh automatic
+      - name: Report publication gate
+        if: >-
+          github.event_name != 'schedule' ||
+          vars.BAZZITE_AUTO_PUBLISH_FEDORA != env.FEDORA_VERSION
+        run: |
+          echo "Candidate only. Daily automatic publication requires a manually validated Bazzite release and BAZZITE_AUTO_PUBLISH_FEDORA=${FEDORA_VERSION}." >> "$GITHUB_STEP_SUMMARY"
