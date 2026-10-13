@@ -54,9 +54,9 @@ RUN --mount=type=bind,from=context,source=/,target=/ctx,ro \
     systemctl enable dconf-update.service && \
     systemctl --global enable ublue-user-flatpak-manager.service && \
     fc-cache --force && \
-    for desktop in htop.desktop nvtop.desktop; do \
+    for desktop in htop.desktop nvtop.desktop discourse.desktop; do \
       desktop_file="/usr/share/applications/${desktop}"; \
-      if [ -f "${desktop_file}" ]; then \
+       if [ -f "${desktop_file}" ]; then \
         sed -i '/^Hidden=/d' "${desktop_file}"; \
         printf '\nHidden=true\n' >>"${desktop_file}"; \
       fi; \
