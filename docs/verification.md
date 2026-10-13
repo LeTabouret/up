@@ -46,7 +46,7 @@ the Bazzite base is not verification of a new final Up candidate.
   no duplicate names or competing kernel/graphics declarations.
 - Bash syntax, ShellCheck and shfmt; behavioral package-removal and Flatpak tests.
 - Base digest/variant, action pinning, CI trust boundaries, signature-before-tag
-  ordering, manual base review, personal defaults and migration-document contracts.
+  ordering, same-major upstream resolution, migration approval, personal defaults and migration-document contracts.
 - Diagnostic privacy and unavailable/timeout handling tests.
 - Full build: package resolution, inherited RPM dependency consistency, Fedora
   major, GNOME/GDM/session files, Steam launcher, multilib graphics, gaming tools,
@@ -57,8 +57,9 @@ the Bazzite base is not verification of a new final Up candidate.
 - Virtualization tmpfiles declarations and build-state cleanup; bootc lint uses
   `--fatal-warnings`.
 - CI verifies the pinned upstream image signature; trusted publication signs and
-  verifies the Up candidate; separate manual promotion verifies the tested digest
-  after operator attestation of VM/hardware gates. PR builds do not publish.
+  verifies the Up candidate. Approved daily updates automatically promote the
+  same verified digest; initial migration and exceptional releases retain manual
+  promotion with operator attestation of VM/hardware gates. PR builds do not publish.
 
 No automated container check proves firmware trust, a working display/session,
 suspend, input handling, successful boot, update origin or recovery. Image
@@ -190,3 +191,22 @@ regression; any numerical performance threshold must exceed measured test noise.
    and dependency testing support it; benchmark before enabling optional tuning.
 4. **Maintenance:** review Cosign/containers-image signature-format migration,
    Fedora-major transitions, reproducible RPM inputs and key-rotation recovery.
+
+## Daily publication regression coverage
+
+`tests/test-release.py` exercises the real resolver and promotion scripts using
+isolated doubles for the registry, container engine and signature verifier, plus
+real `jq` policy evaluation. It covers immutable digest selection, unchanged PR
+pins, wrong/missing Fedora majors, invalid upstream signatures, registry/pull
+failures, explicit major-specific opt-in, Silverblue/missing/wrong-major current
+releases, invalid candidate signatures/labels, manual migration, and a failed
+major-tag copy leaving `latest` untouched. Candidate upload, signing and
+verification failures and manual Silverblue recovery are also covered.
+Repository policy tests check the
+unchanged schedule, default-branch/PR boundaries, success-only step ordering and
+the shared manual/automatic release lock.
+
+These are orchestration regression tests, not a new image-build, registry-signing
+or hardware validation record. First live CI publication and the initial manual
+VM/hardware migration checklist remain required. Earlier execution records above
+describe their respective historical implementations.

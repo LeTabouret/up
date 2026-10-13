@@ -5,6 +5,22 @@ review and run later on the gaming PC. Nothing in this work rebases, reboots,
 enrolls keys, modifies host services, or installs a bootloader. Complete CI and
 the manual canary in [verification](verification.md) before daily-driver use.
 
+## Publication approval
+
+The Silverblue → Bazzite migration is not automatically promoted. Keep
+`BAZZITE_AUTO_PUBLISH_FEDORA` unset until the exact candidate passes the manual VM
+and hardware checklist and the owner explicitly approves the migration. Then run
+**Promote tested image** with that Up digest and the validation attestation; only
+afterward set the repository Actions variable to `44`. Subsequent successful daily
+builds publish same-major Bazzite updates automatically. CI also requires an
+already signed Bazzite Fedora 44 `latest`, so setting the variable prematurely
+cannot replace Silverblue. See [the workflow details](../README.md#development).
+
+For a later Fedora-major migration or an exceptional release, remove the variable
+first, review any required major guards, validate a candidate manually, and use
+**Promote tested image** again. Re-enable daily publication only for the validated
+major. CI does not perform or attest to the hardware checks below.
+
 ## Actual machine preflight — required before the generic procedure
 
 Read the current machine state before migration. Identify the booted known-good

@@ -83,15 +83,39 @@ class Policy(unittest.TestCase):
         job = promotion["jobs"]["promote"]
         self.assertIn("inputs.validation_complete", job["if"])
         self.assertIn("default_branch", job["if"])
-        promote = job["steps"][-1]["run"]
+        self.assertIn("promote-image.sh manual", job["steps"][-1]["run"])
+        promote = (ROOT / ".github/scripts/promote-image.sh").read_text()
         self.assertLess(promote.index("cosign verify"), promote.index("skopeo copy"))
-        self.assertIn('"docker://${repository}@${DIGEST}"', promote)
+        self.assertIn('"docker://${REPOSITORY}@${DIGEST}"', promote)
         self.assertNotIn("podman build", promote)
         self.assertIn('[[ "$actual" == "$DIGEST" ]]', promote)
         for step in job["steps"]:
             if "uses" in step:
                 self.assertRegex(step["uses"], r"@[a-f0-9]{40}$")
-        self.assertTrue(any("cosign verify --key keys/bazzite.pub" in s.get("run", "") for s in steps))
+        resolver = (ROOT / ".github/scripts/resolve-base.sh").read_text()
+        self.assertIn("cosign verify --key keys/bazzite.pub", resolver)
+        self.assertEqual(jobs["publish"]["needs"], "validate")
+        self.assertIn("default_branch", jobs["publish"]["if"])
+        self.assertEqual(jobs["publish"]["concurrency"], promotion["concurrency"])
+        self.assertEqual(workflow["env"]["FEDORA_VERSION"], promotion["env"]["FEDORA_VERSION"])
+        self.assertEqual(workflow.get("on", workflow.get(True))["schedule"], [{"cron": "05 10 * * *"}])
+        self.assertEqual(workflow["concurrency"]["cancel-in-progress"],
+                         "${{ github.event_name == 'pull_request' }}")
+        names = [step.get("name") for step in steps]
+        auto = steps[names.index("Automatically publish approved daily update")]
+        self.assertIn("github.event_name == 'schedule'", auto["if"])
+        self.assertIn("vars.BAZZITE_AUTO_PUBLISH_FEDORA == env.FEDORA_VERSION", auto["if"])
+        self.assertIn("promote-image.sh automatic", auto["run"])
+        self.assertLess(names.index("Build and lint"), names.index("Image smoke tests"))
+        self.assertLess(names.index("Image smoke tests"), names.index("Publish candidate, sign and verify"))
+        self.assertLess(names.index("Publish candidate, sign and verify"), names.index(auto["name"]))
+        for step in steps:
+            self.assertFalse(step.get("continue-on-error", False))
+            self.assertNotIn("always()", step.get("if", ""))
+            self.assertNotIn("failure()", step.get("if", ""))
+        self.assertTrue(any("resolve-base.sh refresh" in step.get("run", "") for step in steps))
+        self.assertTrue(any("resolve-base.sh pinned" in step.get("run", "")
+                            for step in jobs["build"]["steps"]))
 
     def test_update_review(self):
         rules = json.loads((ROOT / "renovate.json").read_text())["packageRules"]

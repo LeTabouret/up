@@ -26,7 +26,8 @@ Bazzite GNOME stable digest → personal RPMs → Up defaults and integration
                            → initramfs identity refresh → image verification
 PR → static tests → upstream signature verification → build → smoke test
 main/schedule → same checks → candidate push → sign and verify
-manual promotion of tested digest → signature verification → moving tags
+approved daily update → verify candidate and existing Bazzite release → moving tags
+manual migration/exception → tested digest + attestation → verify → moving tags
 ```
 
 ## Original functionality inventory
@@ -48,7 +49,7 @@ manual promotion of tested digest → signature verification → moving tags
 | Controllers | hid_nintendo/hid_playstation preload | Retained; upstream controller integration inherited |
 | User paths | `$HOME`, `$XDG_DATA_HOME`, state under `.local/share/ublue` | No hardcoded user; existing state persists; no home migration runs at build time |
 | Automation | No repository Justfile; upstream ujust inherited | Bazzite ujust inherited; image-switch/reset recipes are administrative tools, not Up's migration path |
-| Updates / CI | Daily builds; PR builds; base digest automerge; OGC manual review | Daily builds retained; all base changes manual review; one upstream uupd orchestrator |
+| Updates / CI | Daily builds; PR builds; base digest automerge; OGC manual review | Daily builds resolve a signed same-major base digest; migration approval gates automatic tags; one upstream uupd orchestrator |
 | Supply chain | Pinned image/action refs and assets; Cosign signing **after moving tags** | Verify base signature; candidate signed and verified before `44` / `latest` promotion |
 | Recovery | README bootc switch/rollback; no hardware/VM gate | Expanded migration, persistence, Secure Boot, signature-policy and manual canary guidance |
 
