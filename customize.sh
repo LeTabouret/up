@@ -67,7 +67,12 @@ systemctl enable uupd.timer
 # The upstream Cockpit entry can launch a container even without Cockpit RPMs.
 systemctl mask cockpit.service
 # Hardware-specific tools remain available without starting on every desktop.
-systemctl disable fw-fanctrl.service scx_loader.service displaylink.service
+systemctl disable fw-fanctrl.service scx_loader.service
+# DisplayLink is optional upstream; retain it when supplied by the base.
+# An installed package with a missing/broken unit must still fail composition.
+if rpm -q --quiet displaylink; then
+    systemctl disable displaylink.service
+fi
 
 # Record the composed result, not guessed package versions.
 rpm -qa --queryformat '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' | sort > /usr/share/up/packages.txt
