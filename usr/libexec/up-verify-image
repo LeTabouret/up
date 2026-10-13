@@ -16,7 +16,7 @@ rpm -q gnome-shell mutter gdm gnome-terminal gnome-software steam steam-devices 
     gnome-control-center nautilus gnome-bluetooth gnome-color-manager gcr3 \
     gnome-online-accounts evolution-data-server gnome-disk-utility papers-previewer \
     yelp malcontent-control orca tecla geoclue2 podman distrobox scx-scheds \
-    dmemcg-booster ryzenadj fw-fanctrl framework-system fw-ectool displaylink \
+    dmemcg-booster ryzenadj fw-fanctrl framework-system fw-ectool \
     linux-cec input-remapper nvtop bazzite-updater cardwire uresourced-dmemcg \
     umu-launcher umu-wrapper firewalld
 # Every declared exclusion must remain absent after all package transactions.
@@ -26,9 +26,12 @@ while IFS= read -r excluded; do
         exit 1
     fi
 done < <(jq -r '.all.exclude.up[]' /usr/share/up/packages.json)
-for unit in fw-fanctrl.service scx_loader.service displaylink.service; do
+for unit in fw-fanctrl.service scx_loader.service; do
     test "$(systemctl is-enabled "$unit")" = disabled
 done
+if rpm -q --quiet displaylink; then
+    test "$(systemctl is-enabled displaylink.service)" = disabled
+fi
 test "$(systemctl is-enabled input-remapper.service)" = enabled
 test "$(systemctl is-enabled cardwired.service)" = enabled
 test "$(readlink /etc/systemd/system/cockpit.service)" = /dev/null

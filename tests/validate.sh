@@ -16,6 +16,7 @@ tests/test-package-removal.sh
 tests/test-flatpak-manager.sh
 tests/test-json-validation.sh
 python3 tests/test-release.py
+python3 tests/test-optional-displaylink.py
 python3 tests/test-policy.py
 python3 tests/test-diagnostics.py
 node tests/test-polkit.js
