@@ -1,13 +1,20 @@
 # Up
 
-Up is a personal Fedora 44 GNOME desktop built on the **Bazzite GNOME desktop**
+Up is a personal Fedora GNOME desktop built on the **Bazzite GNOME desktop**
 gaming foundation. It retains Up's dark/Tela appearance, Inter and JetBrains
 Mono fonts, flat mouse acceleration, favorite applications, virtualization tools
 and per-user Flatpaks. Bazzite maintains the kernel, graphics drivers, multilib
 libraries, Steam integration and controller support.
 
-Each build uses a verified upstream digest. Daily builds refresh Bazzite within
-Fedora 44; Fedora-major changes require manual review and validation. Up does not maintain a separate kernel installer, Mesa patch set or Deck
+Each build uses a verified upstream digest. Up is published in three channels:
+
+| Tag | Built from | Fedora |
+|---|---|---|
+| `latest` (rolling) | Bazzite GNOME `stable` | whichever major Bazzite currently ships; moves forward only |
+| `stable-45` (alias `45`) | Bazzite GNOME `stable-45` | always 45 |
+| `stable-44` (alias `44`) | Bazzite GNOME `stable-44` | always 44 |
+
+Up does not maintain a separate kernel installer, Mesa patch set or Deck
 session. Steam stays native RPM; no speculative GPU or scheduler flags are added.
 This refactor is not a claim of improved FPS or a confirmed Steam UI fix.
 
@@ -48,45 +55,52 @@ alone and preserves user remotes. It does not grant blanket filesystem access.
 CI verifies the upstream signature, checks the actual Fedora major, builds and
 checks the complete image. The existing daily schedule remains `05 10 * * *`
 (10:05 UTC). PRs use the committed base pin and never publish. Default-branch
-pushes, manual builds and scheduled builds resolve Bazzite GNOME `stable` once,
-verify it, and replace the pin **only in the runner checkout**. Build and smoke
-tests use that same digest. If upstream moves off Fedora 44, the run fails before
-composition; it does not migrate Fedora or silently reuse an old base.
+pushes, manual builds and scheduled builds build **each channel independently**:
+each resolves its Bazzite tag once, verifies it, and replaces the pin **only in the
+runner checkout**. Build and smoke tests use that same digest. A `stable-N`
+channel fails before composition if upstream ever carries another Fedora major;
+`latest` accepts the major Bazzite `stable` carries. One failing channel (for
+example a new major that does not pass the image checks yet) does not stop the
+others.
 
-Successful default-branch builds push a unique candidate tag, then sign and
-verify its exact digest. Daily builds can advance `ghcr.io/letabouret/up:44` and
-`:latest` automatically after all automated checks pass, but **the initial
-Silverblue → Bazzite migration remains manual**:
+Successful default-branch builds push a unique candidate tag per channel, then
+sign and verify its exact digest. When the repository Actions variable
+`UP_AUTO_PUBLISH` is `true`, scheduled builds then advance each channel's tags
+automatically after all automated checks pass:
 
-1. Leave the repository Actions variable `BAZZITE_AUTO_PUBLISH_FEDORA` unset
-   while validating the migration candidate in a VM and on the actual hardware,
-   following [the release checklist](docs/verification.md).
-2. After explicit approval, run **Promote tested image** on the default branch
-   with that exact Up digest and the validation attestation.
-3. Set `BAZZITE_AUTO_PUBLISH_FEDORA` to `44` in repository Settings → Secrets and
-   variables → Actions → Variables. Subsequent successful daily builds publish
-   automatically. The workflow also verifies that the existing signed `latest`
-   is already Bazzite GNOME on Fedora 44, so the variable alone cannot perform
-   the migration. Remove the variable to pause automatic publication.
+- `stable-N` and its `N` alias accept only Fedora N images built from `stable-N`.
+- `latest` accepts only images built from Bazzite `stable`, and **never moves to an
+  older Fedora major than it already has**. When Bazzite moves to a new major,
+  `latest` follows on the first night that major passes every check; until then it
+  keeps the last good image and the run shows the failure.
+- **The initial Silverblue → Bazzite migration remains manual**: automation only
+  updates a `latest` that is already a signed Bazzite build of Up, so the variable
+  alone cannot perform the migration.
 
-Keep **Promote tested image** for exceptional releases and future major
-migrations, including a validated Silverblue recovery; such a recovery closes
-the automatic Bazzite gate again. Before a major migration, disable automatic publication, review the
-committed base and Fedora guards (including both workflows), and repeat the
-manual validation/promotion before opting in to the new major. Push and manually
-dispatched builds remain candidate-only. No approval variable is set by this code.
+To bootstrap or for exceptional releases, run **Promote tested image** on the default
+branch with the exact Up digest, the channel and the validation attestation. Remove
+`UP_AUTO_PUBLISH` (Settings → Secrets and variables → Actions → Variables) to pause
+automatic publication. Push and manually dispatched builds remain candidate-only.
+No approval variable is set by this code.
 Configure `SIGNING_SECRET` to match `cosign.pub` and require **Static validation
 and tests** and **Build and verify image** before merging. Never commit a private
 key. GitHub Actions container checks do not validate real-machine boot, Secure
-Boot, GPU gaming or recovery; the hardware checklist remains operator-run.
+Boot, GPU gaming or recovery; the hardware checklist remains operator-run. A new
+Fedora major on `latest` reaches machines without that checklist: follow
+`stable-N` instead to choose when to change majors.
 
 Automatic and manual promotion use the same digest-preserving registry copy and
-release lock. All build, smoke, signature and image-policy checks precede moving
-tags; `latest` is updated last. Failed checks leave the last published `latest`
-untouched. The two tag writes are not a registry transaction: a copy/network
-failure can leave `44` and `latest` temporarily different, but only an already
-validated, signed candidate is eligible for either tag. Inspect both digests
-before retrying the manual workflow after such a failure.
+a per-channel release lock. All build, smoke, signature and image-policy checks
+precede moving tags. Failed checks leave the channel's published tags untouched.
+The `stable-N` and `N` writes are not a registry transaction: a copy/network
+failure can leave them temporarily different, but only an already validated,
+signed candidate is eligible for either tag. Inspect both digests before retrying
+the manual workflow after such a failure.
+
+To add a Fedora major, add `stable-N` to the `publish` matrix in
+`.github/workflows/build.yml` and to the channel options in
+`.github/workflows/promote.yml`; drop a channel the same way once Bazzite stops
+updating it.
 
 Renovate still proposes reviewed changes to the committed fallback pin and
 action versions; base automerge remains disabled. CI records the resolved base

@@ -11,6 +11,10 @@ FROM base
 
 ARG IMAGE_REPOSITORY="ghcr.io/letabouret/up"
 ARG IMAGE_VERSION="44-dev"
+# Defaults describe the committed pin; CI passes the resolved channel's values.
+ARG IMAGE_CHANNEL="stable-44"
+ARG IMAGE_BASE_NAME="ghcr.io/ublue-os/bazzite-gnome:stable-44"
+ARG UP_FEDORA_MAJOR="44"
 ARG IMAGE_REVISION="local"
 ARG IMAGE_CREATED="1970-01-01T00:00:00Z"
 LABEL org.opencontainers.image.title="Up" \
@@ -21,7 +25,7 @@ LABEL org.opencontainers.image.title="Up" \
       org.opencontainers.image.created="${IMAGE_CREATED}" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${IMAGE_REVISION}" \
-      org.opencontainers.image.base.name="ghcr.io/ublue-os/bazzite-gnome:stable-44"
+      org.opencontainers.image.base.name="${IMAGE_BASE_NAME}"
 
 ARG TELA_VERSION="2026-07-07"
 ARG TELA_SHA256="6b8c28f637067a15551459ab90e6720c5aba1215b777b6f1f506fea188a1ddf9"

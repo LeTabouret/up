@@ -15,7 +15,6 @@ permissions:
   contents: read
 env:
   IMAGE_NAME: up
-  FEDORA_VERSION: '44'
 jobs:
   validate:
     name: Static validation and tests
@@ -48,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           repository="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${IMAGE_NAME}"
-          version="${FEDORA_VERSION}-$(date -u +%Y%m%d)-${GITHUB_SHA::7}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          version="${UP_FEDORA_MAJOR}-$(date -u +%Y%m%d)-${GITHUB_SHA::7}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${UP_CHANNEL}"
           echo "repository=${repository}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
       - name: Build and lint
@@ -58,6 +57,9 @@ jobs:
         run: |
           podman build --tag localhost/up:build --file Containerfile \
             --label "org.opencontainers.image.base.digest=${BASE_DIGEST}" \
+            --build-arg "IMAGE_CHANNEL=${UP_CHANNEL}" \
+            --build-arg "IMAGE_BASE_NAME=${UP_BASE_NAME}" \
+            --build-arg "UP_FEDORA_MAJOR=${UP_FEDORA_MAJOR}" \
             --build-arg "IMAGE_REPOSITORY=${REPOSITORY}" \
             --build-arg "IMAGE_VERSION=${VERSION}" \
             --build-arg "IMAGE_CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -65,10 +67,16 @@ jobs:
       - name: Image smoke tests
         run: tests/image-smoke.sh localhost/up:build
   publish:
-    name: Build, verify and sign candidate
-    # Serialize all release writers with the manual promotion workflow.
+    name: Build, verify and sign candidate (${{ matrix.channel }})
+    strategy:
+      # Each channel publishes independently: a failing new Fedora major must
+      # not stop the older stream from updating.
+      fail-fast: false
+      matrix:
+        channel: [stable-44, stable-45, latest]
+    # Serialize each channel's tag writers with the manual promotion workflow.
     concurrency:
-      group: up-release-promotion
+      group: up-release-promotion-${{ matrix.channel }}
       cancel-in-progress: false
     if: >-
       github.event_name != 'pull_request' &&
@@ -87,14 +95,14 @@ jobs:
       - name: Install registry tools
         run: sudo apt-get update && sudo apt-get install --yes skopeo
       - name: Resolve and verify compatible upstream
-        run: bash .github/scripts/resolve-base.sh refresh
+        run: bash .github/scripts/resolve-base.sh refresh "${{ matrix.channel }}"
       - name: Image coordinates
         id: image
         shell: bash
         run: |
           set -euo pipefail
           repository="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${IMAGE_NAME}"
-          version="${FEDORA_VERSION}-$(date -u +%Y%m%d)-${GITHUB_SHA::7}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          version="${UP_FEDORA_MAJOR}-$(date -u +%Y%m%d)-${GITHUB_SHA::7}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${UP_CHANNEL}"
           echo "repository=${repository}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
       - name: Build and lint
@@ -104,6 +112,9 @@ jobs:
         run: |
           podman build --tag localhost/up:build --file Containerfile \
             --label "org.opencontainers.image.base.digest=${BASE_DIGEST}" \
+            --build-arg "IMAGE_CHANNEL=${UP_CHANNEL}" \
+            --build-arg "IMAGE_BASE_NAME=${UP_BASE_NAME}" \
+            --build-arg "UP_FEDORA_MAJOR=${UP_FEDORA_MAJOR}" \
             --build-arg "IMAGE_REPOSITORY=${REPOSITORY}" \
             --build-arg "IMAGE_VERSION=${VERSION}" \
             --build-arg "IMAGE_CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -136,9 +147,9 @@ jobs:
       - name: Automatically publish approved daily update
         if: >-
           github.event_name == 'schedule' &&
-          vars.BAZZITE_AUTO_PUBLISH_FEDORA == env.FEDORA_VERSION
+          vars.UP_AUTO_PUBLISH == 'true'
         env:
-          BAZZITE_AUTO_PUBLISH_FEDORA: ${{ vars.BAZZITE_AUTO_PUBLISH_FEDORA }}
+          CHANNEL: ${{ matrix.channel }}
           REPOSITORY: ${{ steps.image.outputs.repository }}
         shell: bash
         run: |
@@ -151,6 +162,6 @@ jobs:
       - name: Report publication gate
         if: >-
           github.event_name != 'schedule' ||
-          vars.BAZZITE_AUTO_PUBLISH_FEDORA != env.FEDORA_VERSION
+          vars.UP_AUTO_PUBLISH != 'true'
         run: |
-          echo "Candidate only. Daily automatic publication requires a manually validated Bazzite release and BAZZITE_AUTO_PUBLISH_FEDORA=${FEDORA_VERSION}." >> "$GITHUB_STEP_SUMMARY"
+          echo "Candidate only (${UP_CHANNEL}). Daily automatic publication requires UP_AUTO_PUBLISH=true." >> "$GITHUB_STEP_SUMMARY"

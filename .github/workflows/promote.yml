@@ -7,6 +7,11 @@ on:
         description: 'Exact Up sha256 digest that passed VM and rEFInd hardware validation'
         required: true
         type: string
+      channel:
+        description: 'Channel to publish: stable-N also moves the N alias'
+        required: true
+        type: choice
+        options: [latest, stable-44, stable-45]
       validation_complete:
         description: 'This digest passed boot, Secure Boot, gaming, update and rollback gates'
         required: true
@@ -15,10 +20,8 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: up-release-promotion
+  group: up-release-promotion-${{ inputs.channel }}
   cancel-in-progress: false
-env:
-  FEDORA_VERSION: '44'
 jobs:
   promote:
     if: >-
@@ -39,6 +42,7 @@ jobs:
       - name: Verify and promote the tested digest without rebuilding
         env:
           DIGEST: ${{ inputs.digest }}
+          CHANNEL: ${{ inputs.channel }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
