@@ -2,8 +2,9 @@
 # Image composition only. Never execute this script on a deployed host.
 set -euo pipefail
 
-: "${IMAGE_REPOSITORY:?}" "${IMAGE_VERSION:?}" "${IMAGE_REVISION:?}"
+: "${IMAGE_REPOSITORY:?}" "${IMAGE_VERSION:?}" "${IMAGE_REVISION:?}" "${IMAGE_CHANNEL:?}"
 [[ "$IMAGE_REPOSITORY" =~ ^ghcr\.io/[a-z0-9._-]+/up$ ]]
+[[ "$IMAGE_CHANNEL" =~ ^(latest|stable-[0-9]+)$ ]]
 [[ "$IMAGE_VERSION" =~ ^[a-zA-Z0-9._-]+$ ]]
 [[ "$IMAGE_REVISION" =~ ^[a-zA-Z0-9._-]+$ ]]
 
@@ -12,9 +13,9 @@ install -d /usr/share/up
 cp /usr/share/ublue-os/image-info.json /usr/share/up/base-image-info.json
 jq --arg vendor "${IMAGE_REPOSITORY#ghcr.io/}" \
     --arg ref "ostree-image-signed:docker://${IMAGE_REPOSITORY}" \
-    --arg version "$IMAGE_VERSION" \
+    --arg version "$IMAGE_VERSION" --arg channel "$IMAGE_CHANNEL" \
     '."image-name" = "up" | ."image-vendor" = ($vendor | split("/")[0]) |
-     ."image-ref" = $ref | ."image-tag" = "latest" | ."image-branch" = "latest" |
+     ."image-ref" = $ref | ."image-tag" = $channel | ."image-branch" = $channel |
      .version = $version | ."version-pretty" = $version' \
     /usr/share/up/base-image-info.json > /usr/share/ublue-os/image-info.json
 
@@ -37,7 +38,7 @@ sed -i -e 's/^NAME=.*/NAME="Up"/' -e 's/^PRETTY_NAME=.*/PRETTY_NAME="Up"/' \
     -e "s/^BOOTLOADER_NAME=.*/BOOTLOADER_NAME=\"Up ${IMAGE_VERSION}\"/" \
     -e "s/^BUILD_ID=.*/BUILD_ID=\"${IMAGE_VERSION}\"/" \
     /usr/lib/os-release
-printf 'Up release 44 (GNOME)\n' > /etc/system-release
+printf 'Up release %s (GNOME)\n' "$(rpm -E '%fedora')" > /etc/system-release
 
 # Up manages user apps without Bazzite's global Flatpak permission overrides or
 # first-login dconf/group changes. Masks also prevent inherited presets starting them.

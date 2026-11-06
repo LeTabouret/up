@@ -197,14 +197,16 @@ regression; any numerical performance threshold must exceed measured test noise.
 `tests/test-release.py` exercises the real resolver and promotion scripts using
 isolated doubles for the registry, container engine and signature verifier, plus
 real `jq` policy evaluation. It covers immutable digest selection, unchanged PR
-pins, wrong/missing Fedora majors, invalid upstream signatures, registry/pull
-failures, explicit major-specific opt-in, Silverblue/missing/wrong-major current
-releases, invalid candidate signatures/labels, manual migration, and a failed
-major-tag copy leaving `latest` untouched. Candidate upload, signing and
-verification failures and manual Silverblue recovery are also covered.
-Repository policy tests check the
-unchanged schedule, default-branch/PR boundaries, success-only step ordering and
-the shared manual/automatic release lock.
+pins, per-channel upstream tags, wrong/missing Fedora majors on `stable-N`
+streams, `latest` rolling to any major, invalid upstream signatures, registry/pull
+failures, Silverblue/missing/wrong-major current releases, `latest` never moving
+to an older major or bootstrapping automatically, first publication of a new
+`stable-N` stream, invalid candidate signatures/labels/base streams, manual
+migration, and a failed channel-tag copy leaving its alias untouched. Candidate
+upload, signing and verification failures and manual Silverblue recovery are
+also covered. Repository policy tests check the unchanged schedule,
+default-branch/PR boundaries, success-only step ordering, the channel matrix and
+the per-channel manual/automatic release locks.
 
 These are orchestration regression tests, not a new image-build, registry-signing
 or hardware validation record. First live CI publication and the initial manual

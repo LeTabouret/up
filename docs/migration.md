@@ -8,18 +8,20 @@ the manual canary in [verification](verification.md) before daily-driver use.
 ## Publication approval
 
 The Silverblue → Bazzite migration is not automatically promoted. Keep
-`BAZZITE_AUTO_PUBLISH_FEDORA` unset until the exact candidate passes the manual VM
-and hardware checklist and the owner explicitly approves the migration. Then run
-**Promote tested image** with that Up digest and the validation attestation; only
-afterward set the repository Actions variable to `44`. Subsequent successful daily
-builds publish same-major Bazzite updates automatically. CI also requires an
-already signed Bazzite Fedora 44 `latest`, so setting the variable prematurely
+`UP_AUTO_PUBLISH` unset until the exact candidate passes the manual VM and
+hardware checklist and the owner explicitly approves the migration. Then run
+**Promote tested image** with that Up digest, the channel and the validation
+attestation; only afterward set the repository Actions variable to `true`.
+Subsequent successful daily builds publish every channel automatically. CI also
+requires an already signed Bazzite `latest`, so setting the variable prematurely
 cannot replace Silverblue. See [the workflow details](../README.md#development).
 
-For a later Fedora-major migration or an exceptional release, remove the variable
-first, review any required major guards, validate a candidate manually, and use
-**Promote tested image** again. Re-enable daily publication only for the validated
-major. CI does not perform or attest to the hardware checks below.
+`latest` follows Bazzite onto a new Fedora major without manual validation, as soon
+as that major passes CI. To decide yourself when to change majors, follow a
+`stable-N` channel and switch to the next one after validating it. For an
+exceptional release, remove the variable first, validate a candidate manually,
+and use **Promote tested image** again. CI does not perform or attest to the
+hardware checks below.
 
 ## Actual machine preflight — required before the generic procedure
 
@@ -185,7 +187,7 @@ Do not use a Bazzite `ujust` rebase/reset recipe to switch Up's source.
 
 Once this exact candidate passes the VM and hardware gates, run the repository's
 manual **Promote tested image** workflow with its digest and validation attestation.
-That verifies the signature again and advances `44`/`latest` without rebuilding.
+That verifies the signature again and advances the chosen channel without rebuilding.
 Automatic builds publish only candidate history tags. Then confirm the merged container policy has a
 `sigstoreSigned` rule for `ghcr.io/letabouret/up` with the correct Up public key
 and `matchRepository`, plus its sigstore-attachments registries.d configuration.
@@ -193,15 +195,15 @@ Do not replace the full policy with an insecure default. Then select a verified
 release channel and enable policy enforcement:
 
 ```bash
-sudo bootc switch --enforce-container-sigpolicy ghcr.io/letabouret/up:44
+sudo bootc switch --enforce-container-sigpolicy ghcr.io/letabouret/up:latest
 sudo bootc status
 ```
 
-This stages whatever **signed** digest the `44` alias currently resolves to;
-compare it with the tested candidate before reboot. If the alias has advanced,
-stay pinned and test that newer digest first. Explicit `44` is preferred over
-`latest` for release intent, while the build also rejects an unexpected Fedora
-major. Check that old `flatpak-system-update.timer` and `flatpak-user-update.timer` have
+Use `latest` to follow Bazzite onto each new Fedora major automatically, or
+`stable-44`/`stable-45` to stay on one major until you switch deliberately. This
+stages whatever **signed** digest the tag currently resolves to; compare it with
+the tested candidate before reboot. If the tag has advanced, stay pinned and test
+that newer digest first. Check that old `flatpak-system-update.timer` and `flatpak-user-update.timer` have
 not survived alongside uupd's equivalent update modules; reconcile deliberate
 overrides instead of scheduling duplicate updates. Only uupd should orchestrate
 OS updates; verify rpm-ostreed-automatic and bootc-fetch-apply timers are inactive.

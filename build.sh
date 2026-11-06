@@ -105,8 +105,10 @@ main() {
     local before after removed package
 
     fedora_release="$(rpm -E '%fedora')"
-    [[ "$fedora_release" == 44 ]] || {
-        echo 'Review the Fedora migration before changing the supported release (44).' >&2
+    # CI resolved and verified this major from the same digest-pinned base.
+    [[ "$fedora_release" == "${UP_FEDORA_MAJOR:?}" ]] || {
+        printf 'Base is Fedora %s, but this build was resolved for Fedora %s.\n' \
+            "$fedora_release" "$UP_FEDORA_MAJOR" >&2
         return 1
     }
     load_packages include "$fedora_release" included

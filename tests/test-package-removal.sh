@@ -83,8 +83,20 @@ if verify_removal_plan "$plan" toolbox; then exit 1; fi
     ((replayed == 0))
 )
 
+# A base whose Fedora major differs from the one CI resolved never reaches dnf.
+(
+    UP_FEDORA_MAJOR=45
+    rpm() { [[ "$1" == -E ]] && echo 44; }
+    dnf5() { echo "dnf5 ran on a mismatched base: $*" >&2 && exit 1; }
+    if main 2> /dev/null; then
+        echo 'Mismatched Fedora major accepted' >&2
+        exit 1
+    fi
+)
+
 # Defense in depth: a replay that loses only i686 must fail the final comparison.
 (
+    UP_FEDORA_MAJOR=44
     printf '{"all":{"include":{"up":[]},"exclude":{"up":["toolbox"]}}}\n' > "$PACKAGES_JSON"
     changed=0
     rpm() {

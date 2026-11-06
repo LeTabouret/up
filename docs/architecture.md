@@ -10,7 +10,7 @@ application decisions and fresh image checks.
 
 ## Decision
 
-Use **architecture A**, the digest-pinned `ghcr.io/ublue-os/bazzite-gnome:stable`
+Use **architecture A**, the digest-pinned `ghcr.io/ublue-os/bazzite-gnome` (`stable-N` / `stable`)
 AMD/Intel desktop image, with a small Up customization layer. It preserves GNOME
 and RPM Steam without adopting the Deck session, KDE, NVIDIA stack, or a handheld
 power-management profile. [Bazzite recommends image-template derivation](https://docs.bazzite.gg/Advanced/creating_custom_image/).
@@ -34,7 +34,7 @@ manual migration/exception → tested digest + attestation → verify → moving
 
 | Area | Baseline implementation | Preservation / change |
 | --- | --- | --- |
-| Base / release | Silverblue-main `44`, digest `1f05de28fc4ce8b004e524b1b5e1e0ce5f828b696c07a352bdb6d776b9242903` | Fedora 44 remains an explicit build gate; base becomes Bazzite GNOME stable |
+| Base / release | Silverblue-main `44`, digest `1f05de28fc4ce8b004e524b1b5e1e0ce5f828b696c07a352bdb6d776b9242903` | Each channel checks its Fedora major; base becomes Bazzite GNOME (`stable-N` streams plus rolling `stable`) |
 | Kernel | Separate akmods `ogc-44`, digest `7bd0caa0cc0b710cb4b78b4115cb8d33e60d89a9b0463c5eadbdd7b91dc357ce`; custom RPM erasure, hook suppression, versionlock, dracut | Kernel and matching modules inherited together; custom installer removed |
 | Desktop | GNOME, upstream session; dark mode, Tela-dark, flat mouse acceleration, favorites | Exact Up dconf file retained; Bazzite cosmetic schema overrides removed; existing user settings still win |
 | Fonts / theme | Vendored Inter/JetBrains Mono; checksum-pinned Tela 2026-07-07 | Retained with licenses and hashes |
@@ -50,7 +50,7 @@ manual migration/exception → tested digest + attestation → verify → moving
 | User paths | `$HOME`, `$XDG_DATA_HOME`, state under `.local/share/ublue` | No hardcoded user; existing state persists; no home migration runs at build time |
 | Automation | No repository Justfile; upstream ujust inherited | Bazzite ujust inherited; image-switch/reset recipes are administrative tools, not Up's migration path |
 | Updates / CI | Daily builds; PR builds; base digest automerge; OGC manual review | Daily builds resolve a signed same-major base digest; migration approval gates automatic tags; one upstream uupd orchestrator |
-| Supply chain | Pinned image/action refs and assets; Cosign signing **after moving tags** | Verify base signature; candidate signed and verified before `44` / `latest` promotion |
+| Supply chain | Pinned image/action refs and assets; Cosign signing **after moving tags** | Verify base signature; candidate signed and verified before `stable-N` / `latest` promotion |
 | Recovery | README bootc switch/rollback; no hardware/VM gate | Expanded migration, persistence, Secure Boot, signature-policy and manual canary guidance |
 
 All tracked text files and workflows were inspected. Font binaries were treated as

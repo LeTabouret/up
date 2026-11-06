@@ -5,7 +5,7 @@ set -euo pipefail
 readonly FEDORA_RELEASE="${FEDORA_RELEASE:-$(rpm -E '%fedora')}"
 readonly KERNEL_INSTALL_DIR="${KERNEL_INSTALL_DIR:-/usr/lib/kernel/install.d}"
 
-[[ "$FEDORA_RELEASE" == 44 ]]
+[[ "$FEDORA_RELEASE" =~ ^[0-9]+$ ]]
 rpm -q gnome-shell mutter gdm gnome-terminal gnome-software steam steam-devices \
     mesa-dri-drivers.x86_64 mesa-dri-drivers.i686 \
     mesa-vulkan-drivers.x86_64 mesa-vulkan-drivers.i686 \
@@ -51,7 +51,8 @@ test "$(readlink /etc/systemd/user/bazzite-user-setup.service)" = /dev/null
 test -f /etc/selinux/config
 grep -Eq '^SELINUX=enforcing$' /etc/selinux/config
 test -s /etc/pki/akmods/certs/akmods-ublue.der
-jq -e '."image-name" == "up" and ."base-image-name" == "silverblue" and ."image-tag" == "latest"' \
+jq -e '."image-name" == "up" and ."base-image-name" == "silverblue" and
+    (."image-tag" | test("^(latest|stable-[0-9]+)$")) and ."image-branch" == ."image-tag"' \
     /usr/share/ublue-os/image-info.json
 grep -Fxq system-db:local /etc/dconf/profile/user
 test -s /etc/dconf/db/local

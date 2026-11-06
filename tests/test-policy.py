@@ -15,7 +15,7 @@ class Policy(unittest.TestCase):
     def test_packages(self):
         data = json.loads((ROOT / "packages.json").read_text())
         for release, group in data.items():
-            self.assertIn(release, ("all", "44"))
+            self.assertRegex(release, r"^(all|[0-9]+)$")
             include, exclude = (group[k]["up"] for k in ("include", "exclude"))
             self.assertFalse(set(include) & set(exclude))
             for items in (include, exclude):
@@ -29,7 +29,14 @@ class Policy(unittest.TestCase):
         text = (ROOT / "Containerfile").read_text()
         images = re.findall(r"^FROM (ghcr.io/\S+)", text, re.M)
         self.assertEqual(len(images), 1)
-        self.assertRegex(images[0], r"^ghcr.io/ublue-os/bazzite-gnome:stable@sha256:[a-f0-9]{64}$")
+        match = re.fullmatch(r"ghcr.io/ublue-os/bazzite-gnome:stable-([0-9]+)@sha256:[a-f0-9]{64}", images[0])
+        self.assertIsNotNone(match, "The committed pin must be a per-major Bazzite stream")
+        # Local builds use the ARG defaults, so they must describe that same pin.
+        major = match[1]
+        self.assertIn(f'ARG IMAGE_CHANNEL="stable-{major}"', text)
+        self.assertIn(f'ARG IMAGE_BASE_NAME="ghcr.io/ublue-os/bazzite-gnome:stable-{major}"', text)
+        self.assertIn(f'ARG UP_FEDORA_MAJOR="{major}"', text)
+        self.assertIn(f'ARG IMAGE_VERSION="{major}-dev"', text)
         self.assertNotIn("install-ogc", text)
         self.assertIn("bootc container lint", text)
         self.assertIn("up-verify-image", text)
@@ -96,15 +103,27 @@ class Policy(unittest.TestCase):
         self.assertIn("cosign verify --key keys/bazzite.pub", resolver)
         self.assertEqual(jobs["publish"]["needs"], "validate")
         self.assertIn("default_branch", jobs["publish"]["if"])
-        self.assertEqual(jobs["publish"]["concurrency"], promotion["concurrency"])
-        self.assertEqual(workflow["env"]["FEDORA_VERSION"], promotion["env"]["FEDORA_VERSION"])
+        # Every channel built daily can be promoted manually, and each channel's
+        # tag writers share one lock across both workflows.
+        channels = jobs["publish"]["strategy"]["matrix"]["channel"]
+        self.assertIn("latest", channels)
+        for channel in channels:
+            self.assertRegex(channel, r"^(latest|stable-[0-9]+)$")
+        self.assertEqual(sorted(channels), sorted(trigger["workflow_dispatch"]["inputs"]["channel"]["options"]))
+        self.assertFalse(jobs["publish"]["strategy"]["fail-fast"])
+        self.assertEqual(jobs["publish"]["concurrency"]["group"], "up-release-promotion-${{ matrix.channel }}")
+        self.assertEqual(promotion["concurrency"]["group"], "up-release-promotion-${{ inputs.channel }}")
+        self.assertFalse(jobs["publish"]["concurrency"]["cancel-in-progress"])
+        self.assertFalse(promotion["concurrency"]["cancel-in-progress"])
+        self.assertIn('refresh "${{ matrix.channel }}"', "".join(s.get("run", "") for s in steps))
         self.assertEqual(workflow.get("on", workflow.get(True))["schedule"], [{"cron": "05 10 * * *"}])
         self.assertEqual(workflow["concurrency"]["cancel-in-progress"],
                          "${{ github.event_name == 'pull_request' }}")
         names = [step.get("name") for step in steps]
         auto = steps[names.index("Automatically publish approved daily update")]
         self.assertIn("github.event_name == 'schedule'", auto["if"])
-        self.assertIn("vars.BAZZITE_AUTO_PUBLISH_FEDORA == env.FEDORA_VERSION", auto["if"])
+        self.assertIn("vars.UP_AUTO_PUBLISH == 'true'", auto["if"])
+        self.assertEqual(auto["env"]["CHANNEL"], "${{ matrix.channel }}")
         self.assertIn("promote-image.sh automatic", auto["run"])
         self.assertLess(names.index("Build and lint"), names.index("Image smoke tests"))
         self.assertLess(names.index("Image smoke tests"), names.index("Publish candidate, sign and verify"))
