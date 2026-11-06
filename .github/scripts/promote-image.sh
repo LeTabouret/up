@@ -15,7 +15,11 @@ verify_image() {
             .["org.opencontainers.image.title"] == "Up" and
             .["containers.bootc"] == "1" and
             ($mode == "manual" or
-             .["org.opencontainers.image.base.name"] == "ghcr.io/ublue-os/bazzite-gnome:stable") and
+             (.["org.opencontainers.image.base.name"] as $base |
+              # Images built before the base moved to the per-major stream
+              # carry the floating tag; the version check still pins the major.
+              $base == "ghcr.io/ublue-os/bazzite-gnome:stable-" + $major or
+              $base == "ghcr.io/ublue-os/bazzite-gnome:stable")) and
             (.["org.opencontainers.image.version"] | startswith($major + "-"))'
 }
 

@@ -4,7 +4,7 @@ set -euo pipefail
 mode="${1:?Usage: resolve-base.sh pinned|refresh}"
 : "${FEDORA_VERSION:?}" "${GITHUB_ENV:?}" "${GITHUB_STEP_SUMMARY:?}"
 base=$(awk '/^FROM ghcr.io\/ublue-os\/bazzite-gnome:/ {print $2}' Containerfile)
-[[ "$base" =~ ^ghcr.io/ublue-os/bazzite-gnome:stable@sha256:[a-f0-9]{64}$ ]]
+[[ "$base" =~ ^ghcr.io/ublue-os/bazzite-gnome:stable-${FEDORA_VERSION}@sha256:[a-f0-9]{64}$ ]]
 case "$mode" in
     pinned) ;;
     refresh)

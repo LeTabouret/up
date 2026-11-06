@@ -42,12 +42,12 @@ elif tool == 'skopeo':
         labels = {
             'org.opencontainers.image.title': 'Up', 'containers.bootc': '1',
             'org.opencontainers.image.version': '44-test',
-            'org.opencontainers.image.base.name': 'ghcr.io/ublue-os/bazzite-gnome:stable',
+            'org.opencontainers.image.base.name': 'ghcr.io/ublue-os/bazzite-gnome:stable-44',
         }
         key = 'previous_labels' if args[-1].endswith(state['previous']) else 'candidate_labels'
         labels.update(state.get(key, {}))
         print(json.dumps({'config': {'Labels': labels}}))
-    elif args[-1].endswith('bazzite-gnome:stable'):
+    elif args[-1].endswith('bazzite-gnome:stable-44'):
         if state.get('resolution_failure'):
             sys.exit(1)
         print(state['base'])
@@ -93,7 +93,7 @@ class Release(unittest.TestCase):
 
     def test_refresh_uses_one_verified_digest_everywhere(self):
         calls = self.run_script('resolve-base.sh', 'refresh')
-        base = f'ghcr.io/ublue-os/bazzite-gnome:stable@{BASE}'
+        base = f'ghcr.io/ublue-os/bazzite-gnome:stable-44@{BASE}'
         self.assertIn(f'FROM {base} AS base', (self.cwd / 'Containerfile').read_text())
         self.assertEqual((self.cwd / 'env').read_text(), f'BASE_DIGEST={BASE}\n')
         self.assertIn(base, (self.cwd / 'summary').read_text())
@@ -137,6 +137,12 @@ class Release(unittest.TestCase):
                          [f'{REPOSITORY}@{PREVIOUS}', f'{REPOSITORY}@{CANDIDATE}'])
         self.assertLess(calls.index(verifies[-1]), calls.index(copies[0]))
 
+    def test_automatic_accepts_latest_built_from_floating_stable_tag(self):
+        self.state['previous_labels'] = {
+            'org.opencontainers.image.base.name': 'ghcr.io/ublue-os/bazzite-gnome:stable'}
+        self.run_script('promote-image.sh', 'automatic')
+        self.assertEqual(sum(call[:2] == ['skopeo', 'copy'] for call in self.calls), 2)
+
     def test_opt_in_is_explicit_and_major_specific(self):
         for value in ('', 'true', '45'):
             with self.subTest(value=value):
@@ -155,6 +161,8 @@ class Release(unittest.TestCase):
             {'candidate_labels': {'org.opencontainers.image.title': 'Other'}},
             {'candidate_labels': {'containers.bootc': '0'}},
             {'candidate_labels': {'org.opencontainers.image.base.name': None}},
+            {'candidate_labels': {
+                'org.opencontainers.image.base.name': 'ghcr.io/ublue-os/bazzite-gnome:stable-45'}},
         ]
         for scenario in scenarios:
             with self.subTest(scenario=scenario):

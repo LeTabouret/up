@@ -10,7 +10,7 @@ application decisions and fresh image checks.
 
 ## Decision
 
-Use **architecture A**, the digest-pinned `ghcr.io/ublue-os/bazzite-gnome:stable`
+Use **architecture A**, the digest-pinned `ghcr.io/ublue-os/bazzite-gnome:stable-44`
 AMD/Intel desktop image, with a small Up customization layer. It preserves GNOME
 and RPM Steam without adopting the Deck session, KDE, NVIDIA stack, or a handheld
 power-management profile. [Bazzite recommends image-template derivation](https://docs.bazzite.gg/Advanced/creating_custom_image/).

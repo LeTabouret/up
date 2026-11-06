@@ -29,7 +29,11 @@ class Policy(unittest.TestCase):
         text = (ROOT / "Containerfile").read_text()
         images = re.findall(r"^FROM (ghcr.io/\S+)", text, re.M)
         self.assertEqual(len(images), 1)
-        self.assertRegex(images[0], r"^ghcr.io/ublue-os/bazzite-gnome:stable@sha256:[a-f0-9]{64}$")
+        self.assertRegex(images[0], r"^ghcr.io/ublue-os/bazzite-gnome:stable-44@sha256:[a-f0-9]{64}$")
+        # The floating :stable tag follows Bazzite onto new Fedora majors; the
+        # base must track the stream that matches the approved build major.
+        workflow = yaml.safe_load((ROOT / ".github/workflows/build.yml").read_text())
+        self.assertIn(f":stable-{workflow['env']['FEDORA_VERSION']}@", images[0])
         self.assertNotIn("install-ogc", text)
         self.assertIn("bootc container lint", text)
         self.assertIn("up-verify-image", text)
